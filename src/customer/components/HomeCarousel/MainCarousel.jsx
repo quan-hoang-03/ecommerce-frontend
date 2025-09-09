@@ -7,7 +7,7 @@ const MainCarousel = () => {
   const items = mainCarouselData.map((item, index) => (
     <img
       key={index}
-      className="cursor-pointer"
+      className="cursor-pointer -z-10"
       role="presentation"
       src={item.image}
       alt={item.alt}
