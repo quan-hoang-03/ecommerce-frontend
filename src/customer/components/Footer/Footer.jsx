@@ -1,166 +1,60 @@
 import Button from '@mui/material/Button'
-import Grid from '@mui/material/Grid'
+import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography'
 import React from 'react'
+import logo from '../../../assets/img/logo.svg'
 
 const Footer = () => {
   return (
     <div>
-      <Grid
-        className="bg-black text-white text-center mt-10"
-        container
-        sx={{ bgcolor: "black", color: "white", py: 3 }}
-      >
-        <Grid item xs={12} sm={6} md={3}>
-          <Typography className="pb-5" variant="h6">
-            {" "}
-            Company
-          </Typography>
-          <div>
-            <Button className="pb-5" variant="h6">
-                {" "}
-              About
-            </Button>
+      <footer class="bg-white shadow-sm dark:bg-gray-900 ">
+        <div class="w-full max-w-screen-xl mx-auto p-4 md:py-8">
+          <div class="sm:flex sm:items-center sm:justify-between">
+            <a
+              href="https://www.facebook.com/quan.hoang.981123/"
+              class="flex items-center mb-4 sm:mb-0 space-x-3 rtl:space-x-reverse"
+            >
+              <img src={logo} class="h-8" alt="Flowbite Logo" />
+              <span class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">
+                Quân Hoàng
+              </span>
+            </a>
+            <ul class="flex flex-wrap items-center mb-6 text-sm font-medium text-gray-500 sm:mb-0 dark:text-gray-400">
+              <li>
+                <a href="#" class="hover:underline me-4 md:me-6">
+                  About
+                </a>
+              </li>
+              <li>
+                <a href="#" class="hover:underline me-4 md:me-6">
+                  Privacy Policy
+                </a>
+              </li>
+              <li>
+                <a href="#" class="hover:underline me-4 md:me-6">
+                  Licensing
+                </a>
+              </li>
+              <li>
+                <a href="#" class="hover:underline">
+                  Contact
+                </a>
+              </li>
+            </ul>
           </div>
-          <div>
-            <Button className="pb-5" variant="h6">
-                {" "}
-              Blog
-            </Button>
-          </div>
-          <div>
-            <Button className="pb-5" variant="h6">
-                {" "}
-              Press
-            </Button>
-          </div>
-          <div>
-            <Button className="pb-5" variant="h6">
-                {" "}
-              Jobs
-            </Button>
-          </div>
-          <div>
-            <Button className="pb-5" variant="h6">
-                {" "}
-              Partners
-            </Button>
-          </div>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Typography className="pb-5" variant="h6">
-            {" "}
-            Company
-          </Typography>
-          <div>
-            <Button className="pb-5" variant="h6">
-                {" "}
-              About
-            </Button>
-          </div>
-          <div>
-            <Button className="pb-5" variant="h6">
-                {" "}
-              Blog
-            </Button>
-          </div>
-          <div>
-            <Button className="pb-5" variant="h6">
-                {" "}
-              Press
-            </Button>
-          </div>
-          <div>
-            <Button className="pb-5" variant="h6">
-                {" "}
-              Jobs
-            </Button>
-          </div>
-          <div>
-            <Button className="pb-5" variant="h6">
-                {" "}
-              Partners
-            </Button>
-          </div>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Typography className="pb-5" variant="h6">
-            {" "}
-            Company
-          </Typography>
-          <div>
-            <Button className="pb-5" variant="h6">
-                {" "}
-              About
-            </Button>
-          </div>
-          <div>
-            <Button className="pb-5" variant="h6">
-                {" "}
-              Blog
-            </Button>
-          </div>
-          <div>
-            <Button className="pb-5" variant="h6">
-                {" "}
-              Press
-            </Button>
-          </div>
-          <div>
-            <Button className="pb-5" variant="h6">
-                {" "}
-              Jobs
-            </Button>
-          </div>
-          <div>
-            <Button className="pb-5" variant="h6">
-                {" "}
-              Partners
-            </Button>
-          </div>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Typography className="pb-5" variant="h6">
-            {" "}
-            Company
-          </Typography>
-          <div>
-            <Button className="pb-5" variant="h6">
-                {" "}
-              About
-            </Button>
-          </div>
-          <div>
-            <Button className="pb-5" variant="h6">
-                {" "}
-              Blog
-            </Button>
-          </div>
-          <div>
-            <Button className="pb-5" variant="h6">
-                {" "}
-              Press
-            </Button>
-          </div>
-          <div>
-            <Button className="pb-5" variant="h6">
-                {" "}
-              Jobs
-            </Button>
-          </div>
-          <div>
-            <Button className="pb-5" variant="h6">
-                {" "}
-              Partners
-            </Button>
-          </div>
-        </Grid>
-      </Grid>
-      <Grid className="pt-5 pb-5" item xs={12}>
-        <Typography className="body2" component="p" align='center'>
-            &copy;2025 All rights reserved | Designed by Hoang Minh Quan
-        </Typography>
-      </Grid>
+          <hr class="my-6 border-gray-200 sm:mx-auto dark:border-gray-700 lg:my-8" />
+          <span class="block text-sm text-gray-500 sm:text-center dark:text-gray-400">
+            © 2023{" "}
+            <a
+              href="https://www.facebook.com/quan.hoang.981123/"
+              class="hover:underline"
+            >
+              Quân Hoàng
+            </a>
+            . All Rights Reserved.
+          </span>
+        </div>
+      </footer>
     </div>
   );
 }
