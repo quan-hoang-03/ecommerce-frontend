@@ -1,9 +1,27 @@
-.productCard{
-    transition: transform 0.3s ease;
+.productCard {
+    overflow: hidden;
+    background: #fff;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
-.productCard:hover .textPart{
-    transform: translateY(-1rem);
+
+.productCard img {
+    transition: transform 0.5s ease;
 }
-.productCard:hover{
-    box-shadow: rgba(0, 0, 0, 0.16) 0px 10px 36px 0px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;
+
+.productCard:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+.productCard:hover img {
+    transform: scale(1.05);
+}
+
+.textPart {
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.productCard:hover .textPart {
+    transform: translateY(-0.5rem);
+    opacity: 0.95;
 }
