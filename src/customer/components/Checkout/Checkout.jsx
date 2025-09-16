@@ -13,6 +13,9 @@ const Checkout = () => {
 
   const [step, setStep] = useState(stepFromUrl);
 
+  // Thêm state lưu địa chỉ
+  const [selectedAddress, setSelectedAddress] = useState("");
+
   const steps = ["Login", "Delivery Address", "Order Summary", "Payment"];
 
   useEffect(() => {
@@ -24,13 +27,17 @@ const Checkout = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-10">
       <div className="max-w-6xl mx-auto bg-white shadow-lg rounded-2xl p-8">
+        {/* Steps */}
         <div className="flex items-center justify-between mb-10">
           {steps.map((label, index) => {
             const isCompleted = step > index + 1;
             const isCurrent = step === index + 1;
 
             return (
-              <div className="flex items-center w-full cursor-pointer">
+              <div
+                className="flex items-center w-full cursor-pointer"
+                key={index}
+              >
                 <div
                   className={`flex items-center justify-center w-10 h-10 rounded-full text-white font-semibold ${
                     isCompleted
@@ -67,7 +74,16 @@ const Checkout = () => {
 
         {/* Nội dung bước */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {step === 2 ? <DeliveryAddressForm/> : <OrderSummary/>}
+          {step === 2 && (
+            <DeliveryAddressForm
+              onAddressSelected={(addr) => {
+                setSelectedAddress(addr); // lưu lại địa chỉ
+                setStep(3); // nhảy sang bước Order Summary
+              }}
+            />
+          )}
+
+          {step === 3 && <OrderSummary address={selectedAddress} />}
         </div>
       </div>
     </div>
