@@ -12,6 +12,7 @@ import { Avatar, Button, Menu, MenuItem } from "@mui/material";
 import { deepPurple } from "@mui/material/colors";
 import TextField from "@mui/material/TextField";
 import { navigation } from "./navigationData";
+import avt from "../../../assets/img/avt.jpg";
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
@@ -231,12 +232,11 @@ export default function Navigation() {
               </button>
 
               {/* Logo */}
-              <div className="ml-4 flex lg:ml-0">
-                <span className="sr-only">Your Company</span>
+              <div className="flex items-center space-x-3 lg:ml-0 ml-4">
                 <img
-                  src="https://res.cloudinary.com/ddkso1wxi/image/upload/v1675919455/Logo/Copy_of_Zosh_Academy_nblljp.png"
-                  alt="Shopwithzosh"
-                  className="h-8 w-8 mr-2"
+                  src={avt}
+                  alt="Quân Hoàng"
+                  className="h-10 w-10 rounded-full shadow-md border border-gray-200"
                 />
               </div>
 
@@ -416,9 +416,7 @@ export default function Navigation() {
 
                 {/* Search */}
                 <div className="flex items-center lg:ml-6">
-                  <p
-                    className="p-2 text-gray-400 hover:text-gray-500"
-                  >
+                  <p className="m-0 p-2 text-gray-400 hover:text-gray-500">
                     <span className="sr-only">Search</span>
 
                     <MagnifyingGlassIcon
@@ -430,9 +428,7 @@ export default function Navigation() {
 
                 {/* Cart */}
                 <div className="ml-4 flow-root lg:ml-6">
-                  <Button
-                    className="group -m-2 flex items-center p-2"
-                  >
+                  <Button className="group -m-2 flex items-center p-2">
                     <ShoppingBagIcon
                       className="h-6 w-6 flex-shrink-0 text-gray-400 group-hover:text-gray-500"
                       aria-hidden="true"
