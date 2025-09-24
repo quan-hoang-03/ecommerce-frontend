@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Box, Typography, Button, Divider, IconButton } from "@mui/material";
 import { Add, Remove, Delete } from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
 
 const Cart = () => {
   const [cart, setCart] = useState([
@@ -53,6 +54,10 @@ const Cart = () => {
     0
   );
   const finalAmount = totalPrice - totalDiscount;
+  const navigate = useNavigate();
+  const handleCheckout = () => {
+    navigate('/checkout?step=2');
+  }
 
   return (
     <Box
@@ -209,6 +214,7 @@ const Cart = () => {
         </Box>
 
         <Button
+          onClick={handleCheckout}
           fullWidth
           sx={{
             background: "linear-gradient(90deg, #9333ea, #6d28d9)",

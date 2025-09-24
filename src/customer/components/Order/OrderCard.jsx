@@ -1,8 +1,8 @@
-// OrderCard.tsx
 import { Grid } from "@mui/material";
 import React from "react";
 import nuochoa from "../../../assets/img/nuochoa.png";
 import AdjustIcon from "@mui/icons-material/Adjust";
+import { useNavigate } from "react-router-dom";
 const orders = [
   {
     id: 1,
@@ -42,8 +42,9 @@ const orders = [
   },
 ];
 const OrderCard = () => {
+  const navigate = useNavigate();
     return (
-      <div className="card shadow-sm h-100">
+      <div onClick={()=>navigate(`/account/order/${5}`)} className="card shadow-sm h-100 cursor-pointer">
         <div className="card-body">
           <div className="row g-4">
             {orders.map((order) => (

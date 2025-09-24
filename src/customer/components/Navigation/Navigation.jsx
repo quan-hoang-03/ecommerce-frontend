@@ -20,6 +20,7 @@ function classNames(...classes) {
 
 export default function Navigation() {
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate()
   const [openAuthModal, setOpenAuthModal] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const openUserMenu = Boolean(anchorEl);
@@ -47,7 +48,7 @@ export default function Navigation() {
   };
 
   const handleCategoryClick = (category, section, item, close) => {
-    // navigate(`/${category.id}/${section.id}/${item.id}`);
+    navigate(`/${category.id}/${section.id}/${item.id}`);
     close();
   };
 
@@ -400,8 +401,9 @@ export default function Navigation() {
                           "aria-labelledby": "basic-button",
                         }}
                       >
-                        <MenuItem>My Orders</MenuItem>
-                        <MenuItem>Logout</MenuItem>
+                        <MenuItem>Thông tin</MenuItem>
+                        <MenuItem onClick={()=>navigate("/account/order")}>Giỏ hàng</MenuItem>
+                        <MenuItem>Đăng xuất</MenuItem>
                       </Menu>
                     </div>
                   ) : (

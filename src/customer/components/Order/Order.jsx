@@ -40,7 +40,9 @@ const OrdersPage = () => {
 
         {/* Orders List */}
         <div className="col-md-9">
-          <OrderCard />
+          <div className="space-y-4">
+            {[1,1].map((item)=> <OrderCard />)}
+          </div>
         </div>
       </div>
     </div>

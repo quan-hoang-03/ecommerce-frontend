@@ -4,6 +4,7 @@ import ProductReviewCard from "./ProductReviewCard";
 import { useState } from "react";
 import HomeSectionCard from "../HomeSectionCard/HomeSectionCard";
 import { mens_kurta } from "../../../Data/men_kurta";
+import { useNavigate } from "react-router-dom";
 
 const product = {
   name: "Basic Tee 6-Pack",
@@ -94,6 +95,7 @@ const StarRating = ({ value, size = "medium", readOnly = false }) => {
   }
 
   return <div className="flex">{stars}</div>;
+
 };
 
 function classNames(...classes) {
@@ -110,6 +112,10 @@ export default function ProductDetails() {
     { label: "Average", value: 20, color: "#f59e0b" },
     { label: "Poor", value: 10, color: "#ef4444" },
   ];
+  const navigate = useNavigate();
+  const handAddToCart=()=>{
+    navigate('/cart');
+  }
   
   return (
     <div className="bg-white lg:px-20">
@@ -243,6 +249,7 @@ export default function ProductDetails() {
                 </div>
 
                 <Button
+                  onClick={handAddToCart}
                   variant="contained"
                   sx={{
                     px: "2rem",
