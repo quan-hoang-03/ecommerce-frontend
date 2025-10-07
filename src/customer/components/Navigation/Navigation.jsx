@@ -13,6 +13,7 @@ import { deepPurple } from "@mui/material/colors";
 import TextField from "@mui/material/TextField";
 import { navigation } from "./navigationData";
 import avt from "../../../assets/img/avt.jpg";
+import AuthModel from "../../Auth/AuthModel";
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
@@ -26,13 +27,6 @@ export default function Navigation() {
   const openUserMenu = Boolean(anchorEl);
   const jwt = localStorage.getItem("jwt");
 
-  // useEffect(() => {
-  //   if (jwt) {
-  //     dispatch(getUser(jwt));
-  //     dispatch(getCart(jwt));
-  //   }
-  // }, [jwt]);
-
   const handleUserClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
@@ -45,6 +39,7 @@ export default function Navigation() {
   };
   const handleClose = () => {
     setOpenAuthModal(false);
+
   };
 
   const handleCategoryClick = (category, section, item, close) => {
@@ -375,7 +370,7 @@ export default function Navigation() {
 
               <div className="ml-auto flex items-center">
                 <div className="hidden lg:flex lg:flex-1 lg:items-center lg:justify-end lg:space-x-6">
-                  {true ? (
+                  {false ? (
                     <div>
                       <Avatar
                         className="text-white"
@@ -402,16 +397,19 @@ export default function Navigation() {
                         }}
                       >
                         <MenuItem>Thông tin</MenuItem>
-                        <MenuItem onClick={()=>navigate("/account/order")}>Giỏ hàng</MenuItem>
+                        <MenuItem onClick={() => navigate("/account/order")}>
+                          Giỏ hàng
+                        </MenuItem>
                         <MenuItem>Đăng xuất</MenuItem>
                       </Menu>
                     </div>
                   ) : (
                     <Button
                       onClick={handleOpen}
-                      className="text-sm font-medium text-gray-700 hover:text-gray-800"
+                      className="px-5 py-2.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg 
+             hover:bg-gray-100 hover:text-blue-600 transition-colors duration-200"
                     >
-                      Signin
+                      Đăng nhập
                     </Button>
                   )}
                 </div>
@@ -446,6 +444,8 @@ export default function Navigation() {
           </div>
         </nav>
       </header>
+
+      <AuthModel handleClose={handleClose} open={openAuthModal} />
     </div>
   );
 }
