@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Button,
   Grid,
@@ -18,8 +18,9 @@ import MailOutlineIcon from "@mui/icons-material/MailOutline";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
-import GoogleIcon from "@mui/icons-material/Google"; // Example for social login
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { getUser, register } from "../State/Auth/Action";
 
 
 const RootContainer = styled(Box)({
@@ -74,6 +75,19 @@ const StyledButton = styled(Button)(({ theme }) => ({
 const RegisterForm = () => {
   const [showPassword, setShowPassword] = React.useState(false);
 
+  const dispatch = useDispatch();
+
+  const jwt = localStorage.getItem("jwt");
+
+  const {auth} = useSelector(store=>store);
+
+  useEffect(() => {
+    if(jwt){
+    dispatch(getUser(jwt));
+    }
+  },[jwt,auth.jwt])
+
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -82,8 +96,9 @@ const RegisterForm = () => {
       firstName: data.get("firstName"),
       lastName: data.get("lastName"),
       email: data.get("email"),
-      password: data.get("password"),
+      passWord: data.get("password"),
     };
+    dispatch(register(userData));
     console.log(userData,"datalogin")
   };
 

@@ -14,6 +14,8 @@ import TextField from "@mui/material/TextField";
 import { navigation } from "./navigationData";
 import avt from "../../../assets/img/avt.jpg";
 import AuthModel from "../../Auth/AuthModel";
+import { useDispatch, useSelector } from "react-redux";
+import { getUser, logout } from "../../State/Auth/Action";
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
@@ -22,10 +24,14 @@ function classNames(...classes) {
 export default function Navigation() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate()
+  const dispatch = useDispatch();
   const [openAuthModal, setOpenAuthModal] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const openUserMenu = Boolean(anchorEl);
   const jwt = localStorage.getItem("jwt");
+  const { auth } = useSelector((store) => store);
+  const location = useLocation();
+
 
   const handleUserClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -46,6 +52,26 @@ export default function Navigation() {
     navigate(`/${category.id}/${section.id}/${item.id}`);
     close();
   };
+
+    useEffect(() => {
+      if(jwt){
+      dispatch(getUser(jwt));
+      }
+    },[jwt,auth.jwt])
+  
+  useEffect(() => {
+    if(auth.user){
+      handleClose();
+    }
+    if(location.pathname==="/register" || location.pathname ==="/login" ){
+      navigate("-1");
+    }
+  },[auth.user]);
+
+  const handleLogout = () => {
+    dispatch(logout());
+    handleCloseUserMenu();
+  }
 
   return (
     <div className="bg-white pb-10">
@@ -370,7 +396,7 @@ export default function Navigation() {
 
               <div className="ml-auto flex items-center">
                 <div className="hidden lg:flex lg:flex-1 lg:items-center lg:justify-end lg:space-x-6">
-                  {false ? (
+                  {auth.user?.firstName ? (
                     <div>
                       <Avatar
                         className="text-white"
@@ -385,7 +411,7 @@ export default function Navigation() {
                           cursor: "pointer",
                         }}
                       >
-                        {/* {auth.user?.firstName[0].toUpperCase()} */}
+                        {auth.user?.firstName[0].toUpperCase()}
                       </Avatar>
                       <Menu
                         id="basic-menu"
@@ -400,7 +426,7 @@ export default function Navigation() {
                         <MenuItem onClick={() => navigate("/account/order")}>
                           Giỏ hàng
                         </MenuItem>
-                        <MenuItem>Đăng xuất</MenuItem>
+                        <MenuItem onClick={handleLogout}>Đăng xuất</MenuItem>
                       </Menu>
                     </div>
                   ) : (

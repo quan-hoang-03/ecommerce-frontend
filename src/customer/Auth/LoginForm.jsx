@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Button,
   Grid,
@@ -21,6 +21,8 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import GoogleIcon from "@mui/icons-material/Google"; // Example for social login
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { getUser, login } from "../State/Auth/Action";
 
 const RootContainer = styled(Box)({
   display: "flex",
@@ -72,7 +74,16 @@ const StyledButton = styled(Button)(({ theme }) => ({
 }));
 
 const LoginForm = () => {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  // const jwt = localStorage.getItem("jwt");
+  // const { auth } = useSelector((store) => store);
+
+  //   useEffect(() => {
+  //     if(jwt){
+  //     dispatch(getUser(jwt));
+  //     }
+  //   },[jwt,auth.jwt])
 
   const [showPassword, setShowPassword] = React.useState(false);
 
@@ -81,11 +92,10 @@ const LoginForm = () => {
 
     const data = new FormData(e.currentTarget);
     const userData = {
-      firstName: data.get("firstName"),
-      lastName: data.get("lastName"),
       email: data.get("email"),
-      password: data.get("password"),
+      passWord: data.get("password"),
     };
+    dispatch(login(userData));
     console.log(userData, "datalogin");
   };
 
