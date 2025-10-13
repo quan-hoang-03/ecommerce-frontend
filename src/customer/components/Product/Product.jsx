@@ -22,7 +22,6 @@ import {
   Squares2X2Icon,
 } from "@heroicons/react/20/solid";
 import ProductCard from "./ProductCard";
-import { mens_kurta } from "../../../Data/men_kurta";
 import { singleFilters, filters } from "./FilterData";
 import FormControl from "@mui/material/FormControl";
 import FormLabel from "@mui/material/FormLabel";
@@ -32,8 +31,9 @@ import Radio from "@mui/material/Radio";
 import FilterListAltIcon from "@mui/icons-material/FilterListAlt";
 import { Navigate, useLocation, useNavigate, useParams } from "react-router-dom";
 import { color } from "framer-motion";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { findProduct } from "../../State/Products/Action";
+import Pagination from "@mui/material/Pagination";
 
 const sortOptions = [
   { name: "Price: Low to High", href: "#", current: false },
@@ -59,9 +59,10 @@ export default function Product() {
   const priceValue = searchParams.get("price");
   const discount = searchParams.get("discount");
   const sortValue = searchParams.get("sort");
-  const pageNumber = searchParams.get("page") || 1;
+  const pageNumber = Number(searchParams.get("page")) || 1;
   const stock = searchParams.get("stock");
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
+  const {product} = useSelector(store=>store)
 
   const handleFilter = (value, sectionId) => {
     const searchParams = new URLSearchParams(location.search);
@@ -93,6 +94,15 @@ export default function Product() {
      navigate({ search: query ? `?${query}` : "" });
   }
 
+  const handlePaginationChange =(e,value) =>{
+    console.log(value,"value")
+    const searchParams = new URLSearchParams(location.search);
+    searchParams.set("page",value);
+    const query = searchParams.toString();
+    navigate({search:`${query}`})
+  }
+  
+
   useEffect(() => {
     //Nếu priceValue === null → gán [minPrice, maxPrice] = [0, 0]
     //Ngược lại (priceValue khác null) → tách chuỗi priceValue bằng dấu - rồi dùng .map(Number) để chuyển mỗi phần thành số
@@ -100,16 +110,17 @@ export default function Product() {
       priceValue === null ? [0, 0] : priceValue.split("-").map(Number);
     const data = {
       category: param.lavelThree,
-      colors: colorValue || [],
-      sizes: sizeValue || [],
+      colors: colorValue || "",
+      size: sizeValue || "",
       minPrice,
       maxPrice,
       minDiscount: discount || 0,
       sort: sortValue || "price_low",
       pageNumber: pageNumber - 1,
-      pageSize: 10,
-      stock: stock,
+      pageSize: 1,
+      stock: stock || "",
     };
+
     dispatch(findProduct(data));
   }, [
     param.lavelThree,
@@ -138,7 +149,7 @@ export default function Product() {
         </Dialog>
 
         <main className="mx-auto px-4 sm:px-6 lg:px-20">
-          <div className="flex items-baseline justify-between border-b border-gray-200 pb-6">
+          <div className="flex items-baseline justify-between border-b border-gray-200   pb-6">
             <h1 className="text-4xl font-bold tracking-tight text-gray-900">
               New Arrivals
             </h1>
@@ -249,7 +260,12 @@ export default function Product() {
                                     <div className="flex h-5 shrink-0 items-center">
                                       <div className="group grid size-4 grid-cols-1">
                                         <input
-                                          onChange={()=>handleFilter(option.value, section.id)}
+                                          onChange={() =>
+                                            handleFilter(
+                                              option.value,
+                                              section.id
+                                            )
+                                          }
                                           defaultValue={option.value}
                                           id={`filter-mobile-${section.id}-${optionIdx}`}
                                           name={`${section.id}[]`}
@@ -316,7 +332,12 @@ export default function Product() {
                                       (option, optionIdx) => (
                                         <>
                                           <FormControlLabel
-                                          onChange={(e)=>{handleRadioFilterChange(e,section.id)}}
+                                            onChange={(e) => {
+                                              handleRadioFilterChange(
+                                                e,
+                                                section.id
+                                              );
+                                            }}
                                             value={option.value}
                                             control={<Radio />}
                                             label={option.label}
@@ -339,11 +360,22 @@ export default function Product() {
               {/* Product grid */}
               <div className="lg:col-span-4 w-full">
                 <div className="flex flex-wrap justify-center bg-white py-5 ">
-                  {mens_kurta.map((item) => (
-                    <ProductCard product={item} />
-                  ))}
+                  {product.products &&
+                    product.products?.content?.map((item) => (
+                      <ProductCard product={item} />
+                    ))}
                 </div>
               </div>
+            </div>
+          </section>
+          <section className="w-full px=[3.6rem]">
+            <div className="px-4 py-5 flex justify-center">
+              <Pagination
+                page={pageNumber}
+                count={product.products?.totalPages}
+                color="secondary"
+                onChange={handlePaginationChange}
+              />
             </div>
           </section>
         </main>

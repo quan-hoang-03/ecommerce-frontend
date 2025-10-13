@@ -1,70 +1,13 @@
 import { StarIcon } from "@heroicons/react/20/solid";
 import { Box, Button, Grid, LinearProgress, Rating } from "@mui/material";
 import ProductReviewCard from "./ProductReviewCard";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import HomeSectionCard from "../HomeSectionCard/HomeSectionCard";
-import { mens_kurta } from "../../../Data/men_kurta";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { findProductById } from "../../State/Products/Action";
+import { addItemToCart } from "../../State/Cart/Action";
 
-const product = {
-  name: "Basic Tee 6-Pack",
-  price: "$192",
-  href: "#",
-  breadcrumbs: [
-    { id: 1, name: "Men", href: "#" },
-    { id: 2, name: "Clothing", href: "#" },
-  ],
-  images: [
-    {
-      src: "https://tailwindcss.com/plus-assets/img/ecommerce-images/product-page-02-secondary-product-shot.jpg",
-      alt: "Two each of gray, white, and black shirts laying flat.",
-    },
-    {
-      src: "https://tailwindcss.com/plus-assets/img/ecommerce-images/product-page-02-tertiary-product-shot-01.jpg",
-      alt: "Model wearing plain black basic tee.",
-    },
-    {
-      src: "https://tailwindcss.com/plus-assets/img/ecommerce-images/product-page-02-tertiary-product-shot-02.jpg",
-      alt: "Model wearing plain gray basic tee.",
-    },
-    {
-      src: "https://tailwindcss.com/plus-assets/img/ecommerce-images/product-page-02-featured-product-shot.jpg",
-      alt: "Model wearing plain white basic tee.",
-    },
-  ],
-  colors: [
-    {
-      id: "white",
-      name: "White",
-      classes: "bg-white checked:outline-gray-400",
-    },
-    {
-      id: "gray",
-      name: "Gray",
-      classes: "bg-gray-200 checked:outline-gray-400",
-    },
-    {
-      id: "black",
-      name: "Black",
-      classes: "bg-gray-900 checked:outline-gray-900",
-    },
-  ],
-  sizes: [
-    { name: "M", inStock: true },
-    { name: "L", inStock: true },
-    { name: "XL", inStock: true },
-  ],
-  description:
-    'The Basic Tee 6-Pack allows you to fully express your vibrant personality with three grayscale options. Feeling adventurous? Put on a heather gray tee. Want to be a trendsetter? Try our exclusive colorway: "Black". Need to add an extra pop of color to your outfit? Our white tee has you covered.',
-  highlights: [
-    "Hand cut and sewn locally",
-    "Dyed with our proprietary colors",
-    "Pre-washed & pre-shrunk",
-    "Ultra-soft 100% cotton",
-  ],
-  details:
-    'The 6-Pack includes two black, two white, and two heather gray Basic Tees. Sign up for our subscription service and be the first to get new, exciting colors, like our upcoming "Charcoal Gray" limited release.',
-};
 const StarRating = ({ value, size = "medium", readOnly = false }) => {
   const stars = [];
   const fullStars = Math.floor(value);
@@ -103,8 +46,7 @@ function classNames(...classes) {
 }
 
 export default function ProductDetails() {
-  const [selectedColor, setSelectedColor] = useState(product.colors[0]);
-  const [selectedSize, setSelectedSize] = useState(product.sizes[2]);
+  const [selectedSize, setSelectedSize] = useState("");
   const ratingData = [
     { label: "Excellent", value: 40, color: "#22c55e" },
     { label: "Very Good", value: 30, color: "#16a34a" },
@@ -113,10 +55,27 @@ export default function ProductDetails() {
     { label: "Poor", value: 10, color: "#ef4444" },
   ];
   const navigate = useNavigate();
-  const handAddToCart=()=>{
-    navigate('/cart');
-  }
-  
+  const handAddToCart = () => {
+    const data = {productId: params.productId, size: selectedSize.name}
+    console.log("data",data);
+    dispatch(addItemToCart(data))
+    navigate("/cart");
+  };
+  const dispatch = useDispatch();
+
+  const params = useParams();
+
+  //useSelector : Lấy dữ liệu (state) từ Redux Store đưa vào component React
+  //Tham số store (hay state) ở đây chính là toàn bộ Redux Store.
+  //Bạn đang truy cập toàn bộ state gốc mà Redux đang quản lý.
+  const { products } = useSelector((store) => store);
+  console.log(params, "param");
+  const data = { productId: params.productId };
+  console.log(data, "data");
+  useEffect(() => {
+    dispatch(findProductById(data));
+  }, [params.productId]);
+  console.log("🧠 Product details from Redux:", products);
   return (
     <div className="bg-white lg:px-20">
       <div className="pt-6">
@@ -125,7 +84,7 @@ export default function ProductDetails() {
             role="list"
             className="mx-auto flex max-w-2xl items-center space-x-2 px-4 sm:px-6 lg:max-w-7xl lg:px-8"
           >
-            {product.breadcrumbs.map((breadcrumb) => (
+            {/* {products.breadcrumbs.map((breadcrumb) => (
               <li key={breadcrumb.id}>
                 <div className="flex items-center">
                   <a
@@ -146,16 +105,16 @@ export default function ProductDetails() {
                   </svg>
                 </div>
               </li>
-            ))}
-            <li className="text-sm">
+            ))} */}
+            {/* <li className="text-sm">
               <a
-                href={product.href}
+                href={products.href}
                 aria-current="page"
                 className="font-medium text-gray-500 hover:text-gray-600"
               >
-                {product.name}
+                {products.name}
               </a>
-            </li>
+            </li> */}
           </ol>
         </nav>
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-10 px-4 pt-10">
@@ -163,13 +122,13 @@ export default function ProductDetails() {
           <div className="flex flex-col items-center ">
             <div className="overflow-hidden rounded-lg max-w-[30rem] max-h-[35rem]">
               <img
-                alt={product.images[0].alt}
-                src={product.images[0].src}
+                alt={""}
+                src={products.product?.imageUrl}
                 className="h-full w-full object-cover object-center"
               />
             </div>
-            <div className="flex flex-wrap space-x-5 justify-center">
-              {product.images.map((item) => (
+            {/* <div className="flex flex-wrap space-x-5 justify-center">
+              {products.images.map((item) => (
                 <div className="aspect-h-2 aspect-w-3 overflow-hidden rounded-lg max-w-[5rem] max-h-[5rem] mt-4">
                   <img
                     alt={item.alt}
@@ -178,16 +137,16 @@ export default function ProductDetails() {
                   />
                 </div>
               ))}
-            </div>
+            </div> */}
           </div>
           {/* Product info */}
           <div className="lg:col-span-1 maxt-auto max-w-2xl px-4 pb-16 sm:px-6 lg:max-w-7xl lg:px-8 lg:pb-24">
             <div className="lg:col-span-2 ">
               <h1 className="text-lg lg:text-xl font-semibold text-gray-900">
-                {product.name}
+                {products.product?.brand}
               </h1>
               <h1 className="text-lg lg:text-xl text-gray-900 opacity-60 pt-1">
-                {product.description}
+                {products.product?.title}
               </h1>
             </div>
 
@@ -195,9 +154,15 @@ export default function ProductDetails() {
             <div className="mt-4 lg:row-span-3 lg:mt-0">
               <h2 className="sr-only">Product information</h2>
               <div className="flex space-x-5 items-center text-lg lg:text-xl text-gray-900 mt-6">
-                <p className="font-semibold">{product.price}</p>
-                <p className="opacity-50 line-through">$250</p>
-                <p className="text-green-600 font-semibold">20% off</p>
+                <p className="font-semibold">
+                  {products.product?.discountPrice}
+                </p>
+                <p className="opacity-50 line-through">
+                  {products.product?.price}
+                </p>
+                <p className="text-green-600 font-semibold">
+                  {products.product?.discountPersent}% off
+                </p>
               </div>
 
               {/* Reviews */}
@@ -225,15 +190,14 @@ export default function ProductDetails() {
 
                   <fieldset aria-label="Choose a size" className="mt-4">
                     <div className="grid grid-cols-4 gap-3">
-                      {product.sizes.map((size) => (
+                      {products.product?.sizes?.map((size) => (
                         <label
-                          key={size.id}
                           aria-label={size.name}
                           className="group relative flex items-center justify-center rounded-md border border-gray-300 bg-white p-3 has-[:checked]:border-indigo-600 has-[:disabled]:border-gray-400 has-[:checked]:bg-indigo-600 has-[:disabled]:bg-gray-200 has-[:disabled]:opacity-25 has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-indigo-600"
                         >
                           <input
                             defaultValue={size.id}
-                            defaultChecked={size === product.sizes[2]}
+                            defaultChecked={size === products.sizes[2]}
                             name="size"
                             type="radio"
                             disabled={!size.inStock}
@@ -282,7 +246,7 @@ export default function ProductDetails() {
 
                 <div className="space-y-6">
                   <p className="text-base text-gray-900">
-                    {product.description}
+                    {products.description}
                   </p>
                 </div>
               </div>
@@ -292,22 +256,22 @@ export default function ProductDetails() {
                   Highlights
                 </h3>
 
-                <div className="mt-4">
+                {/* <div className="mt-4">
                   <ul role="list" className="list-disc space-y-2 pl-4 text-sm">
-                    {product.highlights.map((highlight) => (
+                    {products.highlights.map((highlight) => (
                       <li key={highlight} className="text-gray-400">
                         <span className="text-gray-600">{highlight}</span>
                       </li>
                     ))}
                   </ul>
-                </div>
+                </div> */}
               </div>
 
               <div className="mt-10">
                 <h2 className="text-sm font-medium text-gray-900">Details</h2>
 
                 <div className="mt-4 space-y-6">
-                  <p className="text-sm text-gray-600">{product.details}</p>
+                  <p className="text-sm text-gray-600">{products.details}</p>
                 </div>
               </div>
             </div>
@@ -402,7 +366,7 @@ export default function ProductDetails() {
         <section className="pt-10">
           <h1 className="py-5 text-xl font-bold">Similer products</h1>
           <div className="flex flex-wrap space-y-5">
-            {mens_kurta.map((item) => (
+            {products.product?.map((item) => (
               <HomeSectionCard product={item} />
             ))}
           </div>
