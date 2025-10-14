@@ -14,7 +14,7 @@ const rootReducer = combineReducers({
   products: customerProductReducer,
   //Quản lý giỏ hàng: thêm, xoá, cập nhật sản phẩm
   cart: cartReduce,
-  //
+  //Order: quản lý đơn hàng: tạo đơn, lịch sử đơn hàng, chi tiết đơn hàng
   order: orderReducer,
 });
 

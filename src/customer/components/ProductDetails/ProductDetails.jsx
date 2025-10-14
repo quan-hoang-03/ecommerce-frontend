@@ -69,13 +69,14 @@ export default function ProductDetails() {
   //Tham số store (hay state) ở đây chính là toàn bộ Redux Store.
   //Bạn đang truy cập toàn bộ state gốc mà Redux đang quản lý.
   const { products } = useSelector((store) => store);
-  console.log(params, "param");
   const data = { productId: params.productId };
   console.log(data, "data");
+
   useEffect(() => {
+    const data = { productId: params.productId };
     dispatch(findProductById(data));
   }, [params.productId]);
-  console.log("🧠 Product details from Redux:", products);
+
   return (
     <div className="bg-white lg:px-20">
       <div className="pt-6">

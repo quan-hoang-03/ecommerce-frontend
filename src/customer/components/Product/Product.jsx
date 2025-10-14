@@ -62,7 +62,7 @@ export default function Product() {
   const pageNumber = Number(searchParams.get("page")) || 1;
   const stock = searchParams.get("stock");
   const dispatch = useDispatch();
-  const {product} = useSelector(store=>store)
+  const {products} = useSelector(store=>store)
 
   const handleFilter = (value, sectionId) => {
     const searchParams = new URLSearchParams(location.search);
@@ -360,8 +360,8 @@ export default function Product() {
               {/* Product grid */}
               <div className="lg:col-span-4 w-full">
                 <div className="flex flex-wrap justify-center bg-white py-5 ">
-                  {product.products &&
-                    product.products?.content?.map((item) => (
+                  {products.products &&
+                    products.products?.content?.map((item) => (
                       <ProductCard product={item} />
                     ))}
                 </div>
@@ -372,7 +372,7 @@ export default function Product() {
             <div className="px-4 py-5 flex justify-center">
               <Pagination
                 page={pageNumber}
-                count={product.products?.totalPages}
+                count={products.products?.totalPages}
                 color="secondary"
                 onChange={handlePaginationChange}
               />

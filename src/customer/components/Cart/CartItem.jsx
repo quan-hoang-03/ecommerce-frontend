@@ -1,8 +1,26 @@
 import React from "react";
 import { Box, Typography, IconButton, Button } from "@mui/material";
 import { Add, Remove } from "@mui/icons-material";
+import { useDispatch } from "react-redux";
+import { getCart, removeItemToCart, updateItemToCart } from "../../State/Cart/Action";
 
-const CartItem = ({ item, onIncrease, onDecrease, onRemove }) => {
+const CartItem = ({item}) => {
+  const dispatch = useDispatch();
+
+ const handleUpdateCartItem = async (num) => {
+   const reqData = {
+     data: { quantity: item.quantity + num },
+     cartItemid: item?.id,
+   };
+
+   await dispatch(updateItemToCart(reqData));
+
+   dispatch(getCart());
+ };
+
+  const handleRemoveItem = () => {
+    dispatch(removeItemToCart(item.id));
+  }
   return (
     <Box
       sx={{
@@ -19,21 +37,21 @@ const CartItem = ({ item, onIncrease, onDecrease, onRemove }) => {
       {/* Ảnh sản phẩm */}
       <Box
         component="img"
-        src={item.image}
-        alt={item.name}
+        src={item.product.imageUrl}
+        alt={item.product.title}
         sx={{ width: 120, height: 150, objectFit: "cover", borderRadius: 2 }}
       />
 
       {/* Thông tin sản phẩm */}
       <Box sx={{ flex: 1 }}>
         <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-          {item.name}
+          {item.product.title}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Size: {item.size}, {item.color}
+          Size: {item.size}, {item.product.colors}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-          Seller: {item.seller}
+          Seller: {item.product.brand}
         </Typography>
 
         {/* Giá */}
@@ -42,27 +60,31 @@ const CartItem = ({ item, onIncrease, onDecrease, onRemove }) => {
             variant="body2"
             sx={{ textDecoration: "line-through", color: "gray" }}
           >
-            ₹{item.oldPrice}
+            {item.price} Đ
           </Typography>
           <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            ₹{item.price}
+            {item.discountedPrice} Đ
           </Typography>
           <Typography variant="body2" sx={{ color: "green", fontWeight: 500 }}>
-            {item.discount}% off
+            {item.discountedPresent}% Off
           </Typography>
         </Box>
 
         {/* Số lượng + Remove */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 2, mt: 2 }}>
-          <IconButton size="small" onClick={() => onDecrease(item.id)}>
+          <IconButton
+            size="small"
+            onClick={() => handleUpdateCartItem(-1)}
+            disabled={item.length <= 1}
+          >
             <Remove />
           </IconButton>
           <Typography>{item.quantity}</Typography>
-          <IconButton size="small" onClick={() => onIncrease(item.id)}>
+          <IconButton size="small" onClick={() => handleUpdateCartItem(1)}>
             <Add />
           </IconButton>
 
-          <Button color="error" onClick={() => onRemove(item.id)}>
+          <Button color="error" onClick={handleRemoveItem}>
             Xóa
           </Button>
         </Box>
