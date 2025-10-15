@@ -1,44 +1,72 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AddressCard from "../AddressCard/AddressCard";
+import { useDispatch } from "react-redux";
+import { createOrder } from "../../State/Order/Action";
 
 const DeliveryAddressForm = ({ onAddressSelected }) => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  // State quản lý dữ liệu form
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
-    address: "",
+    streetAddress: "",
     city: "",
     state: "",
     zip: "",
     phone: "",
   });
 
-  const navigate = useNavigate();
-
+  // Cập nhật dữ liệu khi người dùng gõ vào input
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  // Khi submit form địa chỉ mới
+  // Submit form địa chỉ mới
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Địa chỉ mới:", formData);
-    onAddressSelected(formData); // báo ngược về Checkout
+
+    const address = {
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      streetAddress: formData.streetAddress,
+      city: formData.city,
+      state: formData.state,
+      zip: formData.zip,
+      phone: formData.phone,
+    };
+
+    const orderData = { address, navigate };
+    dispatch(createOrder(orderData));
+
+    // Xóa dữ liệu form sau khi lưu
+    setFormData({
+      firstName: "",
+      lastName: "",
+      streetAddress: "",
+      city: "",
+      state: "",
+      zip: "",
+      phone: "",
+    });
   };
 
   return (
     <>
       {/* Saved Addresses */}
-      <div className="space-y-4">
+      <div className="space-y-4 mb-6">
         <AddressCard onSelectAddress={onAddressSelected} />
       </div>
 
       {/* New Address Form */}
       <div>
-        <h2 className="text-lg font-semibold mb-3">Add New Address</h2>
+        <h2 className="text-lg font-semibold mb-3">Thêm địa chỉ mới</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <input
@@ -47,6 +75,7 @@ const DeliveryAddressForm = ({ onAddressSelected }) => {
               placeholder="First Name *"
               value={formData.firstName}
               onChange={handleChange}
+              required
               className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 outline-none"
             />
             <input
@@ -55,16 +84,18 @@ const DeliveryAddressForm = ({ onAddressSelected }) => {
               placeholder="Last Name *"
               value={formData.lastName}
               onChange={handleChange}
+              required
               className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 outline-none"
             />
           </div>
 
           <textarea
-            name="address"
-            placeholder="Address *"
+            name="streetAddress"
+            placeholder="Địa điểm *"
             rows="3"
-            value={formData.address}
+            value={formData.streetAddress}
             onChange={handleChange}
+            required
             className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 outline-none"
           />
 
@@ -75,14 +106,16 @@ const DeliveryAddressForm = ({ onAddressSelected }) => {
               placeholder="City *"
               value={formData.city}
               onChange={handleChange}
+              required
               className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 outline-none"
             />
             <input
               type="text"
               name="state"
-              placeholder="State/Province/Region *"
+              placeholder="State / Province / Region *"
               value={formData.state}
               onChange={handleChange}
+              required
               className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 outline-none"
             />
           </div>
@@ -94,14 +127,16 @@ const DeliveryAddressForm = ({ onAddressSelected }) => {
               placeholder="Zip / Postal Code *"
               value={formData.zip}
               onChange={handleChange}
+              required
               className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 outline-none"
             />
             <input
-              type="text"
+              type="tel"
               name="phone"
               placeholder="Phone Number *"
               value={formData.phone}
               onChange={handleChange}
+              required
               className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 outline-none"
             />
           </div>
