@@ -4,7 +4,7 @@ import CustomerRoutes from './Routes/CustomerRoutes.jsx';
 import AdminRoutes from './Routes/AdminRoutes.jsx';
 function App() {
   return (
-    <div className="">
+    <div>
       <Routes>
         <Route path="/*" element={<CustomerRoutes />} />
         <Route path="/admin/*" element={<AdminRoutes />} />
