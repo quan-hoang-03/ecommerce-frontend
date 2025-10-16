@@ -1,6 +1,6 @@
 import { Avatar, Button, Card, CardHeader, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import React, { useEffect } from 'react'
-import { findProduct } from '../../customer/State/Products/Action';
+import { deleteProduct, findProduct } from '../../customer/State/Products/Action';
 import { useDispatch, useSelector } from 'react-redux';
 import { useLocation } from 'react-router-dom';
 
@@ -12,6 +12,12 @@ const ProductsTable = () => {
     const priceValue = searchParams.get("price");
     const pageNumber = Number(searchParams.get("page")) || 1;
     const {products} = useSelector((state) => state);
+
+    const handleProductDelete = (productId) => {
+        console.log(productId,"iddd")
+        dispatch(deleteProduct(productId));
+    }
+
     console.log(products,"1111");
     useEffect(() => {
         const [minPrice, maxPrice] =
@@ -25,12 +31,12 @@ const ProductsTable = () => {
         minDiscount: 0,
         sort: "price_low",
         pageNumber: pageNumber - 1,
-        pageSize: 1,
+        pageSize: 10,
         stock: "",
       };
 
       dispatch(findProduct(data));
-    }, []);
+    }, [products.deleteProduct]);
     
   return (
     <div className="p-5 bg-gray-50 min-h-screen">
@@ -59,7 +65,9 @@ const ProductsTable = () => {
               <TableCell sx={{ fontWeight: 600 }}>Danh mục</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Giá</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Số lượng</TableCell>
-              <TableCell align='center' sx={{ fontWeight: 600 }}>Xóa</TableCell>
+              <TableCell align="center" sx={{ fontWeight: 600 }}>
+                Xóa
+              </TableCell>
             </TableRow>
           </TableHead>
 
@@ -108,6 +116,7 @@ const ProductsTable = () => {
 
                 <TableCell align="center">
                   <Button
+                    onClick={() => handleProductDelete(item.id)}
                     variant="outlined"
                     color="error"
                     size="small"

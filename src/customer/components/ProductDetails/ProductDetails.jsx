@@ -1,7 +1,7 @@
 import { StarIcon } from "@heroicons/react/20/solid";
 import { Box, Button, Grid, LinearProgress, Rating } from "@mui/material";
 import ProductReviewCard from "./ProductReviewCard";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import HomeSectionCard from "../HomeSectionCard/HomeSectionCard";
 import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -69,8 +69,11 @@ export default function ProductDetails() {
   //Tham số store (hay state) ở đây chính là toàn bộ Redux Store.
   //Bạn đang truy cập toàn bộ state gốc mà Redux đang quản lý.
   const { products } = useSelector((store) => store);
+  console.log(products,"productttt")
+  console.log(products?.product?.content?.description,"content");
+  const productData = products?.product?.content || [];
+  console.log(productData,"logData");
   const data = { productId: params.productId };
-  console.log(data, "data");
 
   useEffect(() => {
     const data = { productId: params.productId };
@@ -119,164 +122,107 @@ export default function ProductDetails() {
           </ol>
         </nav>
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-10 px-4 pt-10">
-          {/* Image gallery */}
-          <div className="flex flex-col items-center ">
-            <div className="overflow-hidden rounded-lg max-w-[30rem] max-h-[35rem]">
-              <img
-                alt={""}
-                src={products.product?.imageUrl}
-                className="h-full w-full object-cover object-center"
-              />
-            </div>
-            {/* <div className="flex flex-wrap space-x-5 justify-center">
-              {products.images.map((item) => (
-                <div className="aspect-h-2 aspect-w-3 overflow-hidden rounded-lg max-w-[5rem] max-h-[5rem] mt-4">
+          {productData.map((item) => (
+            <React.Fragment key={item.id}>
+              {/* Image gallery */}
+              <div className="flex flex-col items-center ">
+                <div className="overflow-hidden rounded-lg max-w-[30rem] max-h-[35rem]">
                   <img
-                    alt={item.alt}
-                    src={item.src}
+                    alt={item.title}
+                    src={item.imageUrl}
                     className="h-full w-full object-cover object-center"
                   />
                 </div>
-              ))}
-            </div> */}
-          </div>
-          {/* Product info */}
-          <div className="lg:col-span-1 maxt-auto max-w-2xl px-4 pb-16 sm:px-6 lg:max-w-7xl lg:px-8 lg:pb-24">
-            <div className="lg:col-span-2 ">
-              <h1 className="text-lg lg:text-xl font-semibold text-gray-900">
-                {products.product?.brand}
-              </h1>
-              <h1 className="text-lg lg:text-xl text-gray-900 opacity-60 pt-1">
-                {products.product?.title}
-              </h1>
-            </div>
-
-            {/* Options */}
-            <div className="mt-4 lg:row-span-3 lg:mt-0">
-              <h2 className="sr-only">Product information</h2>
-              <div className="flex space-x-5 items-center text-lg lg:text-xl text-gray-900 mt-6">
-                <p className="font-semibold">
-                  {products.product?.discountPrice}
-                </p>
-                <p className="opacity-50 line-through">
-                  {products.product?.price}
-                </p>
-                <p className="text-green-600 font-semibold">
-                  {products.product?.discountPersent}% off
-                </p>
               </div>
 
-              {/* Reviews */}
-              <div className="mt-6">
-                <div className="flex items-center space-x-3">
-                  <Rating
-                    name="read-only"
-                    value={5.5}
-                    readOnly
-                    sx={{ cursor: "pointer" }}
-                  />
-                  <p className="opacity-50 text-sm">1000 Ratings</p>
-                  <p className="ml-3 text-sm font-medium text-indigo-600 hover:text-indigo-500">
-                    3870 Reviews
-                  </p>
+              {/* Product info */}
+              <div className="lg:col-span-1 maxt-auto max-w-2xl px-4 pb-16 sm:px-6 lg:max-w-7xl lg:px-8 lg:pb-24">
+                <div className="lg:col-span-2 ">
+                  <h1 className="text-lg lg:text-xl font-semibold text-gray-900">
+                    {item.brand}
+                  </h1>
+                  <h1 className="text-lg lg:text-xl text-gray-900 opacity-60 pt-1">
+                    {item.title}
+                  </h1>
                 </div>
-              </div>
 
-              <form className="mt-10">
-                {/* Sizes */}
-                <div className="mt-10">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-medium text-gray-900">Size</h3>
+                <div className="mt-4 lg:row-span-3 lg:mt-0">
+                  <div className="flex space-x-5 items-center text-lg lg:text-xl text-gray-900 mt-6">
+                    <p className="font-semibold">{item.discountPrice}</p>
+                    <p className="opacity-50 line-through">{item.price}</p>
+                    <p className="text-green-600 font-semibold">
+                      {item.discountPersent}% off
+                    </p>
                   </div>
 
-                  <fieldset aria-label="Choose a size" className="mt-4">
-                    <div className="grid grid-cols-4 gap-3">
-                      {products.product?.sizes?.map((size) => (
-                        <label
-                          aria-label={size.name}
-                          className="group relative flex items-center justify-center rounded-md border border-gray-300 bg-white p-3 has-[:checked]:border-indigo-600 has-[:disabled]:border-gray-400 has-[:checked]:bg-indigo-600 has-[:disabled]:bg-gray-200 has-[:disabled]:opacity-25 has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-indigo-600"
-                        >
-                          <input
-                            defaultValue={size.id}
-                            defaultChecked={size === products.sizes[2]}
-                            name="size"
-                            type="radio"
-                            disabled={!size.inStock}
-                            className="absolute inset-0 appearance-none focus:outline focus:outline-0 disabled:cursor-not-allowed cursor-pointer rounded-md"
-                          />
-                          <span className="text-sm font-medium uppercase text-gray-900 group-has-[:checked]:text-white">
-                            {size.name}
-                          </span>
-                        </label>
-                      ))}
+                  {/* Sizes */}
+                  <div className="mt-10">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-medium text-gray-900">
+                        Size
+                      </h3>
                     </div>
-                  </fieldset>
+
+                    <fieldset aria-label="Choose a size" className="mt-4">
+                      <div className="grid grid-cols-4 gap-3">
+                        {item.sizes?.map((size) => (
+                          <label
+                            key={size.id}
+                            aria-label={size.name}
+                            className="group relative flex items-center justify-center rounded-md border border-gray-300 bg-white p-3 has-[:checked]:border-indigo-600 has-[:disabled]:border-gray-400 has-[:checked]:bg-indigo-600 has-[:disabled]:bg-gray-200 has-[:disabled]:opacity-25 has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-indigo-600"
+                          >
+                            <input
+                              defaultValue={size.id}
+                              name="size"
+                              type="radio"
+                              disabled={!size.inStock}
+                              className="absolute inset-0 appearance-none focus:outline focus:outline-0 disabled:cursor-not-allowed cursor-pointer rounded-md"
+                            />
+                            <span className="text-sm font-medium uppercase text-gray-900 group-has-[:checked]:text-white">
+                              {size.name}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </fieldset>
+                  </div>
+
+                  <Button
+                    onClick={handAddToCart}
+                    variant="contained"
+                    sx={{
+                      px: "2rem",
+                      py: "0.8rem",
+                      fontSize: "1rem",
+                      fontWeight: "600",
+                      textTransform: "none",
+                      borderRadius: "12px",
+                      boxShadow: "0 4px 12px rgba(145,85,253,0.4)",
+                      background:
+                        "linear-gradient(90deg, #9155fd 0%, #6d28d9 100%)",
+                      "&:hover": {
+                        background:
+                          "linear-gradient(90deg, #7c3aed 0%, #5b21b6 100%)",
+                        boxShadow: "0 6px 16px rgba(124,58,237,0.5)",
+                        transform: "translateY(-2px)",
+                      },
+                      transition: "all 0.3s ease",
+                    }}
+                  >
+                    Thêm vào giỏ hàng
+                  </Button>
                 </div>
 
-                <Button
-                  onClick={handAddToCart}
-                  variant="contained"
-                  sx={{
-                    px: "2rem",
-                    py: "0.8rem",
-                    fontSize: "1rem",
-                    fontWeight: "600",
-                    textTransform: "none",
-                    borderRadius: "12px",
-                    boxShadow: "0 4px 12px rgba(145,85,253,0.4)",
-                    background:
-                      "linear-gradient(90deg, #9155fd 0%, #6d28d9 100%)",
-                    "&:hover": {
-                      background:
-                        "linear-gradient(90deg, #7c3aed 0%, #5b21b6 100%)",
-                      boxShadow: "0 6px 16px rgba(124,58,237,0.5)",
-                      transform: "translateY(-2px)",
-                    },
-                    transition: "all 0.3s ease",
-                  }}
-                >
-                  Thêm vào giỏ hàng
-                </Button>
-              </form>
-            </div>
-
-            <div className="py-10 lg:col-span-2 lg:col-start-1 lg:border-r lg:border-gray-200 lg:pb-16 lg:pr-8 lg:pt-6">
-              {/* Description and details */}
-              <div>
-                <h3 className="sr-only">Description</h3>
-
-                <div className="space-y-6">
-                  <p className="text-base text-gray-900">
-                    {products.description}
+                {/* Description */}
+                <div className="py-10">
+                  <h3 className="text-sm font-medium text-gray-900">Mô tả</h3>
+                  <p className="text-base text-gray-900 mt-3">
+                    {item.description}
                   </p>
                 </div>
               </div>
-
-              <div className="mt-10">
-                <h3 className="text-sm font-medium text-gray-900">
-                  Highlights
-                </h3>
-
-                {/* <div className="mt-4">
-                  <ul role="list" className="list-disc space-y-2 pl-4 text-sm">
-                    {products.highlights.map((highlight) => (
-                      <li key={highlight} className="text-gray-400">
-                        <span className="text-gray-600">{highlight}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div> */}
-              </div>
-
-              <div className="mt-10">
-                <h2 className="text-sm font-medium text-gray-900">Details</h2>
-
-                <div className="mt-4 space-y-6">
-                  <p className="text-sm text-gray-600">{products.details}</p>
-                </div>
-              </div>
-            </div>
-          </div>
+            </React.Fragment>
+          ))}
         </section>
 
         {/* rating and reviews */}
@@ -367,7 +313,7 @@ export default function ProductDetails() {
         <section className="pt-10">
           <h1 className="py-5 text-xl font-bold">Similer products</h1>
           <div className="flex flex-wrap space-y-5">
-            {products.product?.map((item) => (
+            {products?.product?.content?.map((item) => (
               <HomeSectionCard product={item} />
             ))}
           </div>

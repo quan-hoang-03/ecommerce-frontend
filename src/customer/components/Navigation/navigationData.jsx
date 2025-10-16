@@ -1,6 +1,10 @@
 export const navigation = {
   categories: [
     {
+      id: "/",
+      name: "Trang chủ",
+    },
+    {
       id: "women",
       name: "Women",
       featured: [

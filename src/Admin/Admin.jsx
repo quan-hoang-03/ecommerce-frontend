@@ -106,7 +106,8 @@ const Admin = () => {
   );
 
   return (
-    <div className="flex h-full">
+    <div>
+    <div className="flex h-[100vh] sticky top-0">
       <CssBaseline />
 
       {/* Sidebar */}
@@ -124,6 +125,8 @@ const Admin = () => {
           <Route path="/customers" element={<CustomersTable />} />
         </Routes>
       </div>
+    </div>
+
     </div>
   );
 };

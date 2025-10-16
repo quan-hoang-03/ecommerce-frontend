@@ -37,21 +37,21 @@ const CartItem = ({item}) => {
       {/* Ảnh sản phẩm */}
       <Box
         component="img"
-        src={item.product.imageUrl}
-        alt={item.product.title}
+        src={item?.product?.imageUrl}
+        alt={item?.product?.title}
         sx={{ width: 120, height: 150, objectFit: "cover", borderRadius: 2 }}
       />
 
       {/* Thông tin sản phẩm */}
       <Box sx={{ flex: 1 }}>
         <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-          {item.product.title}
+          {item?.product?.title}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Size: {item.size}, {item.product.colors}
+          Size: {item?.size}, {item?.product?.colors}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-          Seller: {item.product.brand}
+          Seller: {item?.product?.brand}
         </Typography>
 
         {/* Giá */}
@@ -60,13 +60,13 @@ const CartItem = ({item}) => {
             variant="body2"
             sx={{ textDecoration: "line-through", color: "gray" }}
           >
-            {item.price} Đ
+            {item?.price} Đ
           </Typography>
           <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            {item.discountedPrice} Đ
+            {item?.discountedPrice} Đ
           </Typography>
           <Typography variant="body2" sx={{ color: "green", fontWeight: 500 }}>
-            {item.discountedPresent}% Off
+            {item?.discountedPresent}% Off
           </Typography>
         </Box>
 
@@ -75,11 +75,11 @@ const CartItem = ({item}) => {
           <IconButton
             size="small"
             onClick={() => handleUpdateCartItem(-1)}
-            disabled={item.length <= 1}
+            disabled={item?.length <= 1}
           >
             <Remove />
           </IconButton>
-          <Typography>{item.quantity}</Typography>
+          <Typography>{item?.quantity}</Typography>
           <IconButton size="small" onClick={() => handleUpdateCartItem(1)}>
             <Add />
           </IconButton>
