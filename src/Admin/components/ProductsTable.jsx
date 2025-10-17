@@ -66,7 +66,7 @@ const ProductsTable = () => {
               <TableCell sx={{ fontWeight: 600 }}>Giá</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Số lượng</TableCell>
               <TableCell align="center" sx={{ fontWeight: 600 }}>
-                Xóa
+                Thao tác
               </TableCell>
             </TableRow>
           </TableHead>

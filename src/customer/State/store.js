@@ -5,6 +5,7 @@ import authReducer from "./Auth/Reducer";
 import { customerProductReducer } from "./Products/Reducer";
 import { cartReduce } from "./Cart/Reducer";
 import { orderReducer } from "./Order/Reducer";
+import { adminOrderReducer } from "./Admin/Order/Reducer";
 
 //Mỗi reducer sẽ phụ trách một phần riêng của state
 const rootReducer = combineReducers({
@@ -16,6 +17,8 @@ const rootReducer = combineReducers({
   cart: cartReduce,
   //Order: quản lý đơn hàng: tạo đơn, lịch sử đơn hàng, chi tiết đơn hàng
   order: orderReducer,
+  
+  adminOrder: adminOrderReducer,
 });
 
 const store = legacy_createStore(rootReducer, applyMiddleware(thunk));
