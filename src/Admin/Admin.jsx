@@ -26,16 +26,17 @@ import ProductsTable from "./components/ProductsTable";
 import OrdersTable from "./components/OrdersTable";
 import CustomersTable from "./components/CustomersTable";
 import AdminDashboard from "./components/Dashboard";
+import LogoutIcon from "@mui/icons-material/Logout";
 
 
 // Sidebar menu
 const menu = [
   { name: "Dashboard", link: "/admin", icon: <DashboardIcon /> },
-  { name: "Products", link: "/admin/products", icon: <InventoryIcon /> },
-  { name: "Customers", link: "/admin/customers", icon: <PersonIcon /> },
-  { name: "Orders", link: "/admin/orders", icon: <ShoppingCartIcon /> },
+  { name: "Sản phẩm", link: "/admin/products", icon: <InventoryIcon /> },
+  { name: "Người dùng", link: "/admin/customers", icon: <PersonIcon /> },
+  { name: "Đơn hàng", link: "/admin/orders", icon: <ShoppingCartIcon /> },
   {
-    name: "Add Product",
+    name: "Thêm sản phẩm",
     link: "/admin/products/create",
     icon: <CategoryIcon />,
   },
@@ -93,12 +94,18 @@ const Admin = () => {
 
       {/* Mục tài khoản ở cuối */}
       <List sx={{ borderTop: "1px solid #eee", mt: "auto" }}>
-        <ListItem disablePadding>
+        <ListItem
+          disablePadding
+          onClick={() => {
+            localStorage.removeItem("jwt");
+            navigate("/admin/login");
+          }}
+        >
           <ListItemButton>
             <ListItemIcon sx={{ minWidth: 40 }}>
-              <AccountCircleIcon />
+              <LogoutIcon />
             </ListItemIcon>
-            <ListItemText primary="Tài khoản" />
+            <ListItemText primary="Đăng xuất" />
           </ListItemButton>
         </ListItem>
       </List>

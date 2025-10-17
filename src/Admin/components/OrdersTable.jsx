@@ -25,7 +25,7 @@ const OrdersTable = () => {
 
   useEffect(() => {
     dispatch(getOrders());
-  }, [adminOrder.confirmed, adminOrder.shipped, adminOrder.delivered]);
+  }, [adminOrder.confirmed, adminOrder.shipped, adminOrder.delivered,adminOrder.deleteOrder]);
   console.log(adminOrder,"dataaaaaaa")
   
   const handleConfirmOrder = (orderId) => {
@@ -45,21 +45,26 @@ const OrdersTable = () => {
     handleClose();
    }
 
-   const [anchorEl, setAnchorEl] = React.useState(null);
+   const [anchorEl, setAnchorEl] = React.useState([]);
    const open = Boolean(anchorEl);
 
-   const handleClick = (event)=>{
-    setAnchorEl(event.currentTarget);
+
+   const handleClick = (event,index)=>{
+    const newAnchorElArray = [...anchorEl];
+    newAnchorElArray[index] = event.currentTarget;
+    setAnchorEl(newAnchorElArray);
    }
 
-   const handleClose = () => {
-     setAnchorEl(null);
+   const handleClose = (index) => {
+    const newAnchorElArray = [...anchorEl];
+    newAnchorElArray[index] = null;
+     setAnchorEl(newAnchorElArray);
    };
   return (
     <div className="p-5 bg-gray-50 min-h-screen">
       <Card className="mt-2 shadow-md rounded-2xl" sx={{ bgcolor: "white" }}>
         <CardHeader
-          title="Danh sách sản phẩm"
+          title="Thống kê đơn hàng"
           titleTypographyProps={{
             sx: {
               fontSize: "1.4rem",
@@ -97,7 +102,7 @@ const OrdersTable = () => {
           </TableHead>
 
           <TableBody>
-            {adminOrder?.orders?.map((item) => (
+            {adminOrder?.orders?.map((item, index) => (
               <TableRow
                 key={item.name}
                 sx={{
@@ -170,18 +175,18 @@ const OrdersTable = () => {
                 <TableCell align="center">
                   <Button
                     id="basic-button"
-                    aria-controls={open ? "basic-menu" : undefined}
                     aria-haspopup="true"
-                    aria-expanded={open ? "true" : undefined}
-                    onClick={handleClick}
+                    onClick={(event) => handleClick(event, index)}
+                    aria-controls={`basic-menu-${item.id}`}
+                    aria-expanded={Boolean(anchorEl[index])}
                   >
                     Trạng thái
                   </Button>
                   <Menu
-                    id="basic-menu"
-                    anchorEl={anchorEl}
-                    open={open}
-                    onClose={handleClose}
+                    id={`basic-menu-${item.id}`}
+                    anchorEl={anchorEl[index]}
+                    open={Boolean(anchorEl[index])}
+                    onClose={() => handleClose(index)}
                     slotProps={{
                       list: {
                         "aria-labelledby": "basic-button",

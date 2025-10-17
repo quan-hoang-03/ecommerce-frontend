@@ -77,6 +77,8 @@ const RegisterForm = () => {
 
   const dispatch = useDispatch();
 
+  const navigate = useNavigate();
+
   const jwt = localStorage.getItem("jwt");
 
   const {auth} = useSelector(store=>store);
@@ -86,6 +88,12 @@ const RegisterForm = () => {
     dispatch(getUser(jwt));
     }
   },[jwt,auth.jwt])
+
+  useEffect(() => {
+    if (auth.jwt) {
+      navigate("/");
+    }
+  }, [auth.jwt, navigate]);
 
 
   const handleSubmit = (e) => {
@@ -115,7 +123,6 @@ const RegisterForm = () => {
     },
   };
 
-  const navigate = useNavigate();
 
   return (
     <RootContainer>

@@ -64,13 +64,14 @@ export default function Navigation() {
       handleClose();
     }
     if(location.pathname==="/register" || location.pathname ==="/login" ){
-      navigate("-1");
+      navigate(-1);
     }
   },[auth.user]);
 
   const handleLogout = () => {
     dispatch(logout());
     handleCloseUserMenu();
+    navigate("/");
   }
 
   return (

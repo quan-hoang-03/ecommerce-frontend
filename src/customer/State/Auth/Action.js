@@ -42,7 +42,7 @@ const loginRequest = () => {
 };
 const loginSuccess = (user) => {
   return {
-    type: "LOGIN_REQUEST",
+    type: "LOGIN_SUCCESS",
     payload: user,
   };
 };
@@ -60,6 +60,7 @@ export const login= userData=>async (dispatch)=>{
         const user = response.data;
         if(user.jwt){
             localStorage.setItem("jwt",user.jwt);
+            localStorage.setItem("role", user.role);
         }
         dispatch(loginSuccess(user.jwt));
     }catch(e){
