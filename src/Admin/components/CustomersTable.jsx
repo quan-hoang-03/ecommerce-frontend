@@ -94,7 +94,7 @@ const CustomersTable = () => {
         <Table>
           <TableHead>
             <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-              <TableCell>ID</TableCell>
+              <TableCell>STT</TableCell>
               <TableCell>Email</TableCell>
               <TableCell>Họ tên</TableCell>
               <TableCell>Quyền hiện tại</TableCell>
@@ -103,9 +103,9 @@ const CustomersTable = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {users.map((user) => (
+            {users.map((user,index) => (
               <TableRow key={user.id}>
-                <TableCell>{user.id}</TableCell>
+                <TableCell>{index + 1}</TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>
                   {user.firstName} {user.lastName}

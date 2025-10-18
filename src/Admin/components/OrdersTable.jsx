@@ -111,7 +111,7 @@ const OrdersTable = () => {
                   transition: "0.2s ease",
                 }}
               >
-                <TableCell align="center">
+                <TableCell align="center" sx={{display:"flex",gap:"10px"}}>
                   {item?.orderItems?.map((orderItem) => (
                     <Avatar
                       src={orderItem.imageUrl}

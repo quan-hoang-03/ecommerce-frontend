@@ -7,6 +7,7 @@ import { createOrder } from "../../State/Order/Action";
 const DeliveryAddressForm = ({ onAddressSelected }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [refetchTrigger, setRefetchTrigger] = useState(0);
 
   // State quản lý dữ liệu form
   const [formData, setFormData] = useState({
@@ -16,7 +17,7 @@ const DeliveryAddressForm = ({ onAddressSelected }) => {
     city: "",
     state: "",
     zip: "",
-    phone: "",
+    mobile: "",
   });
 
   // Cập nhật dữ liệu khi người dùng gõ vào input
@@ -39,11 +40,13 @@ const DeliveryAddressForm = ({ onAddressSelected }) => {
       city: formData.city,
       state: formData.state,
       zip: formData.zip,
-      phone: formData.phone,
+      mobile: formData.mobile,
     };
 
     const orderData = { address, navigate };
     dispatch(createOrder(orderData));
+
+    setRefetchTrigger((prev) => prev + 1);
 
     // Xóa dữ liệu form sau khi lưu
     setFormData({
@@ -53,7 +56,7 @@ const DeliveryAddressForm = ({ onAddressSelected }) => {
       city: "",
       state: "",
       zip: "",
-      phone: "",
+      mobile: "",
     });
   };
 
@@ -61,7 +64,10 @@ const DeliveryAddressForm = ({ onAddressSelected }) => {
     <>
       {/* Saved Addresses */}
       <div className="space-y-4 mb-6">
-        <AddressCard onSelectAddress={onAddressSelected} />
+        <AddressCard
+          refetchTrigger={refetchTrigger}
+          onSelectAddress={onAddressSelected}
+        />
       </div>
 
       {/* New Address Form */}
@@ -72,7 +78,7 @@ const DeliveryAddressForm = ({ onAddressSelected }) => {
             <input
               type="text"
               name="firstName"
-              placeholder="First Name *"
+              placeholder="Họ *"
               value={formData.firstName}
               onChange={handleChange}
               required
@@ -81,7 +87,7 @@ const DeliveryAddressForm = ({ onAddressSelected }) => {
             <input
               type="text"
               name="lastName"
-              placeholder="Last Name *"
+              placeholder="Tên *"
               value={formData.lastName}
               onChange={handleChange}
               required
@@ -103,7 +109,7 @@ const DeliveryAddressForm = ({ onAddressSelected }) => {
             <input
               type="text"
               name="city"
-              placeholder="City *"
+              placeholder="Thành phố *"
               value={formData.city}
               onChange={handleChange}
               required
@@ -112,7 +118,7 @@ const DeliveryAddressForm = ({ onAddressSelected }) => {
             <input
               type="text"
               name="state"
-              placeholder="State / Province / Region *"
+              placeholder="Tỉnh / Khu vực *"
               value={formData.state}
               onChange={handleChange}
               required
@@ -124,7 +130,7 @@ const DeliveryAddressForm = ({ onAddressSelected }) => {
             <input
               type="text"
               name="zip"
-              placeholder="Zip / Postal Code *"
+              placeholder="Mã Code *"
               value={formData.zip}
               onChange={handleChange}
               required
@@ -132,9 +138,9 @@ const DeliveryAddressForm = ({ onAddressSelected }) => {
             />
             <input
               type="tel"
-              name="phone"
-              placeholder="Phone Number *"
-              value={formData.phone}
+              name="mobile"
+              placeholder="Số điện thoại *"
+              value={formData.mobile}
               onChange={handleChange}
               required
               className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 outline-none"

@@ -14,7 +14,7 @@ import {
   Box,
   Divider,
 } from "@mui/material";
-import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import { navigation } from "../../customer/components/Navigation/navigationData";
 
 const initialSizes = [
   { name: "S", quantity: 0 },
@@ -38,15 +38,34 @@ const CreateProductForm = () => {
     thirdLavelCategory: "",
     description: "",
   });
+  const [imageFile, setImageFile] = useState(null);
 
   const dispatch = useDispatch();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setProductData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
+
+    if (name === "topLavelCategory") {
+      // Khi chọn cấp 1, reset cấp 2 và cấp 3
+      setProductData((prevData) => ({
+        ...prevData,
+        topLavelCategory: value,
+        secondLavelCategory: "",
+        thirdLavelCategory: "",
+      }));
+    } else if (name === "secondLavelCategory") {
+      // Khi chọn cấp 2, reset cấp 3
+      setProductData((prevData) => ({
+        ...prevData,
+        secondLavelCategory: value,
+        thirdLavelCategory: "",
+      }));
+    } else {
+      setProductData((prevData) => ({
+        ...prevData,
+        [name]: value,
+      }));
+    }
   };
 
   const handleSizeChange = (e, index) => {
@@ -61,9 +80,50 @@ const CreateProductForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    dispatch(createProduct(productData));
-    console.log(productData, "dataaaaa");
+
+    const formData = new FormData();
+    formData.append(
+      "product",
+      new Blob([JSON.stringify(productData)], { type: "application/json" })
+    );
+    if (imageFile) {
+      formData.append("image", imageFile);
+    }
+
+    dispatch(createProduct(formData));
+
+    // Reset form
+    setProductData({
+      imageUrl: "",
+      brand: "",
+      title: "",
+      color: "",
+      discountedPrice: "",
+      price: "",
+      discountPersent: "",
+      size: initialSizes,
+      quantity: "",
+      topLavelCategory: "",
+      secondLavelCategory: "",
+      thirdLavelCategory: "",
+      description: "",
+    });
+    setImageFile(null);
   };
+
+
+  // Lấy danh mục cấp 1
+  const categoryLevel1 = navigation.categories;
+
+  // Lấy danh mục cấp 2 dựa trên category cấp 1 đã chọn
+  const categoryLevel2 =
+    navigation.categories.find((cat) => cat.id === productData.topLavelCategory)
+      ?.sections || [];
+
+  // Lấy danh mục cấp 3 dựa trên category cấp 2 đã chọn
+  const categoryLevel3 =
+    categoryLevel2.find((sec) => sec.id === productData.secondLavelCategory)
+      ?.items || [];
 
   return (
     <Fragment>
@@ -111,13 +171,45 @@ const CreateProductForm = () => {
             >
               {/* Đường dẫn ảnh */}
               <Grid item xs={12}>
-                <TextField
+                <Button
+                  variant="outlined"
+                  component="label"
                   fullWidth
-                  label="Đường dẫn ảnh sản phẩm"
-                  name="imageUrl"
-                  value={productData.imageUrl}
-                  onChange={handleChange}
-                />
+                  sx={{ textTransform: "none" }}
+                >
+                  {imageFile ? imageFile.name : "Chọn ảnh sản phẩm"}
+                  <input
+                    type="file"
+                    hidden
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        setImageFile(file); // giữ file thật để gửi FormData
+                        setProductData((prev) => ({
+                          ...prev,
+                          imageUrl: URL.createObjectURL(file), // chỉ để preview
+                        }));
+                      }
+                    }}
+                  />
+                </Button>
+
+                {/* Hiển thị ảnh xem trước */}
+                {productData.imageUrl && (
+                  <Box sx={{ mt: 2, textAlign: "center" }}>
+                    <img
+                      src={productData.imageUrl}
+                      alt="preview"
+                      style={{
+                        maxWidth: "200px",
+                        maxHeight: "200px",
+                        borderRadius: "10px",
+                        objectFit: "cover",
+                      }}
+                    />
+                  </Box>
+                )}
               </Grid>
 
               {/* Thương hiệu - Tên sản phẩm */}
@@ -211,9 +303,11 @@ const CreateProductForm = () => {
                       value={productData.topLavelCategory}
                       onChange={handleChange}
                     >
-                      <MenuItem value="men">Men</MenuItem>
-                      <MenuItem value="women">Women</MenuItem>
-                      <MenuItem value="kids">Kids</MenuItem>
+                      {categoryLevel1.map((item) => (
+                        <MenuItem key={item.id} value={item.id}>
+                          {item.name}
+                        </MenuItem>
+                      ))}
                     </Select>
                   </FormControl>
                 </div>
@@ -230,9 +324,11 @@ const CreateProductForm = () => {
                       value={productData.secondLavelCategory}
                       onChange={handleChange}
                     >
-                      <MenuItem value="clothing">Clothing</MenuItem>
-                      <MenuItem value="accessories">Accessories</MenuItem>
-                      <MenuItem value="brands">Brands</MenuItem>
+                      {categoryLevel2.map((sec) => (
+                        <MenuItem key={sec.id} value={sec.id}>
+                          {sec.name}
+                        </MenuItem>
+                      ))}
                     </Select>
                   </FormControl>
                 </div>
@@ -249,10 +345,11 @@ const CreateProductForm = () => {
                       value={productData.thirdLavelCategory}
                       onChange={handleChange}
                     >
-                      <MenuItem value="tshirt">T-shirt</MenuItem>
-                      <MenuItem value="pants">Pants</MenuItem>
-                      <MenuItem value="shoes">Shoes</MenuItem>
-                      <MenuItem value="mens_kurta">Mens_Kurta</MenuItem>
+                      {categoryLevel3.map((item) => (
+                        <MenuItem key={item.id} value={item.id}>
+                          {item.name}
+                        </MenuItem>
+                      ))}
                     </Select>
                   </FormControl>
                 </div>

@@ -1,6 +1,6 @@
 import { api, API_BASE_URL } from "../../../config/apiConfig";
 import { CREATE_ORDER_SUCCESS } from "../Order/ActionType";
-import { DELETE_PRODUCT_SUCCESS } from "./ActionType";
+import { CREATE_PRODUCT_FAILURE, CREATE_PRODUCT_REQUEST, CREATE_PRODUCT_SUCCESS, DELETE_PRODUCT_SUCCESS } from "./ActionType";
 
 export const findProduct=(reqData)=>async(dispatch)=>{
   //(dispatch) => { ... }: Redux Thunk cho phép bạn trả về một hàm, chứ không chỉ là một object.
@@ -57,19 +57,20 @@ export const findProductById = (reqData) => async (dispatch) => {
   }
 };
 
-export const createProduct =(product) => async(dispatch)=>{
+export const createProduct = (formData) => async (dispatch) => {
   try {
     dispatch({ type: "CREATE_PRODUCT_REQUEST" });
-    const { data } = await api.post(`/api/admin/products/`, product);
-    console.log(data,"dataaa");
-    dispatch({
-      type:CREATE_ORDER_SUCCESS,
-      payload:data,
-    })
+    const { data } = await api.post("/api/admin/products/", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    console.log("Created product:", data);
+    dispatch({ type: "CREATE_PRODUCT_SUCCESS", payload: data });
   } catch (e) {
-      dispatch({ type: "CREATE_PRODUCT_FAILURE", payload: e.message });
+    console.error(e);
+    dispatch({ type: "CREATE_PRODUCT_FAILURE", payload: e.message });
   }
-} 
+};
+
 export const deleteProduct = (productId) => async (dispatch) => {
   try {
     dispatch({ type: "DELETE_PRODUCT_REQUEST" });

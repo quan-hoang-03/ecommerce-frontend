@@ -1,6 +1,7 @@
 import React from 'react'
 import "./ProductCard.css"
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../../../config/apiConfig';
 const ProductCard = ({product}) => {
   const navigate = useNavigate();
   return (
@@ -11,8 +12,8 @@ const ProductCard = ({product}) => {
       <div className="h-[20rem]">
         <img
           className="h-full w-full object-cover object-left-top"
-          src={product.imageUrl}
-          alt=""
+          src={`${API_BASE_URL}${product.imageUrl}`}
+          alt={product.title}
         />
       </div>
       <div className="textPart bg-white p-3">

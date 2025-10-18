@@ -1,8 +1,10 @@
 import { Avatar, Button, Card, CardHeader, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { deleteProduct, findProduct } from '../../customer/State/Products/Action';
 import { useDispatch, useSelector } from 'react-redux';
 import { useLocation } from 'react-router-dom';
+import axios from 'axios';
+import { API_BASE_URL } from '../../config/apiConfig';
 
 const ProductsTable = () => {
     const dispatch = useDispatch();
@@ -11,33 +13,37 @@ const ProductsTable = () => {
     const searchParams = new URLSearchParams(decodedQueryString);
     const priceValue = searchParams.get("price");
     const pageNumber = Number(searchParams.get("page")) || 1;
-    const {products} = useSelector((state) => state);
+    const [products, setProducts] = useState([]);
+     useEffect(() => {
+        const token = localStorage.getItem("jwt");
+       axios
+         .get(`${API_BASE_URL}/api/admin/products/all`, {
+           headers: {
+             Authorization: `Bearer ${token}`,
+           },
+         })
+         .then((res) => {
+           setProducts(res.data);
+         })
+         .catch((err) => console.error("Lỗi khi load sản phẩm:", err));
+     }, []);
 
-    const handleProductDelete = (productId) => {
-        console.log(productId,"iddd")
-        dispatch(deleteProduct(productId));
-    }
+   const handleProductDelete = async (productId) => {
+     const confirmDelete = window.confirm(
+       "Bạn có chắc chắn muốn xóa sản phẩm này không?"
+     );
+     if (!confirmDelete) return; // nếu bấm Hủy thì thoát
 
-    console.log(products,"1111");
-    useEffect(() => {
-        const [minPrice, maxPrice] =
-          priceValue === null ? [0, 0] : priceValue.split("-").map(Number);
-      const data = {
-        category: "mens_kurta",
-        colors: "",
-        size: "",
-        minPrice,
-        maxPrice,
-        minDiscount: 0,
-        sort: "price_low",
-        pageNumber: pageNumber - 1,
-        pageSize: 10,
-        stock: "",
-      };
+     try {
+       await dispatch(deleteProduct(productId));
+       setProducts((prev) => prev.filter((p) => p.id !== productId));
+       alert("Đã xóa sản phẩm thành công!");
+     } catch (err) {
+       console.error("Lỗi khi xóa sản phẩm:", err);
+       alert("Xóa sản phẩm thất bại!");
+     }
+   };
 
-      dispatch(findProduct(data));
-    }, [products.deleteProduct]);
-    
   return (
     <div className="p-5 bg-gray-50 min-h-screen">
       <Card className="mt-2 shadow-md rounded-2xl" sx={{ bgcolor: "white" }}>
@@ -72,7 +78,7 @@ const ProductsTable = () => {
           </TableHead>
 
           <TableBody>
-            {products.product?.content?.map((item) => (
+            {products.map((item) => (
               <TableRow
                 key={item.name}
                 sx={{

@@ -39,7 +39,7 @@ const OrderSummary = ({ address }) => {
       ) : (
         <p>Chưa có địa chỉ nào được chọn</p>
       )} */}
-      <AddressCard address={order?.order.shippingAddress}/>
+      <AddressCard address={order?.order?.shippingAddress}/>
       <Box
         sx={{
           display: "flex",
@@ -52,7 +52,7 @@ const OrderSummary = ({ address }) => {
       >
         {/* Danh sách sản phẩm */}
         <Box sx={{ flex: 2 }}>
-          {order.orders?.orderItems?.map((item) => (
+          {order.order?.orderItems?.map((item) => (
             <CartItem item={item} />
           ))}
         </Box>
