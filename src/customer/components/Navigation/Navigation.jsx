@@ -12,10 +12,11 @@ import { Avatar, Button, Menu, MenuItem } from "@mui/material";
 import { deepPurple } from "@mui/material/colors";
 import TextField from "@mui/material/TextField";
 import { navigation } from "./navigationData";
-import avt from "../../../assets/img/avt.jpg";
+import avt from "../../../assets/img/logo-cosmetic.jpg";
 import AuthModel from "../../Auth/AuthModel";
 import { useDispatch, useSelector } from "react-redux";
 import { getUser, logout } from "../../State/Auth/Action";
+import { API_BASE_URL } from "../../../config/apiConfig";
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
@@ -27,6 +28,7 @@ export default function Navigation() {
   const dispatch = useDispatch();
   const [openAuthModal, setOpenAuthModal] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
+  const [avatarUrl, setAvatarUrl] = useState(null);
   const openUserMenu = Boolean(anchorEl);
   const jwt = localStorage.getItem("jwt");
   const { auth } = useSelector((store) => store);
@@ -58,6 +60,32 @@ export default function Navigation() {
       dispatch(getUser(jwt));
       }
     },[jwt,auth.jwt])
+
+    // Load avatar - ưu tiên từ server (auth.user.avatar) hơn localStorage
+    useEffect(() => {
+      if (auth.user) {
+        // Ưu tiên avatar từ server trước
+        if (auth.user.avatar) {
+          // Backend trả về path như /uploads/avatars/filename.jpg
+          const avatarUrl = auth.user.avatar.startsWith('http') 
+            ? auth.user.avatar 
+            : `${API_BASE_URL}${auth.user.avatar}`;
+          setAvatarUrl(avatarUrl);
+          // Cập nhật localStorage để đồng bộ
+          localStorage.setItem(`avatar_${auth.user.id}`, avatarUrl);
+        } else {
+          // Nếu không có avatar từ server, thử lấy từ localStorage
+          const savedAvatar = localStorage.getItem(`avatar_${auth.user.id}`);
+          if (savedAvatar) {
+            setAvatarUrl(savedAvatar);
+          } else {
+            setAvatarUrl(null);
+          }
+        }
+      } else {
+        setAvatarUrl(null);
+      }
+    }, [auth.user]);
   
   useEffect(() => {
     if(auth.user){
@@ -260,8 +288,8 @@ export default function Navigation() {
                   {" "}
                   <img
                     src={avt}
-                    alt="Quân Hoàng"
-                    className="h-10 w-10 rounded-full shadow-md border border-gray-200 cursor-pointer"
+                    alt=""
+                    className="h-12 w-12 rounded-full border border-gray-200 cursor-pointer"
                   />
                 </Link>
               </div>
@@ -403,19 +431,19 @@ export default function Navigation() {
                   {auth.user?.firstName ? (
                     <div>
                       <Avatar
+                        src={avatarUrl}
                         className="text-white"
                         onClick={handleUserClick}
                         aria-controls={open ? "basic-menu" : undefined}
                         aria-haspopup="true"
                         aria-expanded={open ? "true" : undefined}
-                        // onClick={handleUserClick}
                         sx={{
-                          bgcolor: deepPurple[500],
+                          bgcolor: avatarUrl ? "transparent" : deepPurple[500],
                           color: "white",
                           cursor: "pointer",
                         }}
                       >
-                        {auth.user?.firstName[0].toUpperCase()}
+                        {!avatarUrl && auth.user?.firstName[0].toUpperCase()}
                       </Avatar>
                       <Menu
                         id="basic-menu"
@@ -426,8 +454,16 @@ export default function Navigation() {
                           "aria-labelledby": "basic-button",
                         }}
                       >
-                        <MenuItem>Thông tin</MenuItem>
-                        <MenuItem onClick={() => navigate("/account/order")}>
+                        <MenuItem onClick={() => {
+                          navigate("/account/profile");
+                          handleCloseUserMenu();
+                        }}>
+                          Thông tin
+                        </MenuItem>
+                        <MenuItem onClick={() => {
+                          navigate("/account/order");
+                          handleCloseUserMenu();
+                        }}>
                           Giỏ hàng
                         </MenuItem>
                         <MenuItem onClick={handleLogout}>Đăng xuất</MenuItem>
