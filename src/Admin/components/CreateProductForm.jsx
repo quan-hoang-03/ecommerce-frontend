@@ -1,5 +1,6 @@
-import React, { Fragment, useState } from "react";
-import { useDispatch } from "react-redux";
+import React, { Fragment, useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { createProduct } from "../../customer/State/Products/Action";
 import {
   Button,
@@ -13,8 +14,16 @@ import {
   Paper,
   Box,
   Divider,
+  Alert,
+  CircularProgress,
+  IconButton,
+  Card,
+  CardMedia,
 } from "@mui/material";
 import { navigation } from "../../customer/components/Navigation/navigationData";
+import AddIcon from "@mui/icons-material/Add";
+import DeleteIcon from "@mui/icons-material/Delete";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
 const initialSizes = [
   { name: "S", quantity: 0 },
@@ -23,6 +32,13 @@ const initialSizes = [
 ];
 
 const CreateProductForm = () => {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { products } = useSelector((store) => store);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+
   const [productData, setProductData] = useState({
     imageUrl: "",
     brand: "",
@@ -40,13 +56,40 @@ const CreateProductForm = () => {
   });
   const [imageFile, setImageFile] = useState(null);
 
-  const dispatch = useDispatch();
+  // Auto calculate discount percentage
+  useEffect(() => {
+    if (productData.price && productData.discountedPrice) {
+      const price = parseFloat(productData.price);
+      const discountedPrice = parseFloat(productData.discountedPrice);
+      if (price > 0 && discountedPrice < price) {
+        const discount = Math.round(((price - discountedPrice) / price) * 100);
+        setProductData((prev) => ({
+          ...prev,
+          discountPersent: discount.toString(),
+        }));
+      }
+    }
+  }, [productData.price, productData.discountedPrice]);
+
+  // Listen to product creation success
+  useEffect(() => {
+    if (products.success) {
+      setSuccess(true);
+      setLoading(false);
+      setTimeout(() => {
+        navigate("/admin/products");
+      }, 2000);
+    }
+    if (products.error) {
+      setError(products.error);
+      setLoading(false);
+    }
+  }, [products.success, products.error, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
 
     if (name === "topLavelCategory") {
-      // Khi chọn cấp 1, reset cấp 2 và cấp 3
       setProductData((prevData) => ({
         ...prevData,
         topLavelCategory: value,
@@ -54,7 +97,6 @@ const CreateProductForm = () => {
         thirdLavelCategory: "",
       }));
     } else if (name === "secondLavelCategory") {
-      // Khi chọn cấp 2, reset cấp 3
       setProductData((prevData) => ({
         ...prevData,
         secondLavelCategory: value,
@@ -78,21 +120,128 @@ const CreateProductForm = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const addSize = () => {
+    const newSize = { name: "", quantity: 0 };
+    setProductData((prevData) => ({
+      ...prevData,
+      size: [...prevData.size, newSize],
+    }));
+  };
 
-    const formData = new FormData();
-    formData.append(
-      "product",
-      new Blob([JSON.stringify(productData)], { type: "application/json" })
-    );
-    if (imageFile) {
-      formData.append("image", imageFile);
+  const removeSize = (index) => {
+    if (productData.size.length > 1) {
+      const sizes = productData.size.filter((_, i) => i !== index);
+      setProductData((prevData) => ({
+        ...prevData,
+        size: sizes,
+      }));
+    }
+  };
+
+  const validateForm = () => {
+    if (!imageFile && !productData.imageUrl) {
+      setError("Vui lòng chọn ảnh sản phẩm");
+      return false;
+    }
+    if (!productData.brand.trim()) {
+      setError("Vui lòng nhập thương hiệu");
+      return false;
+    }
+    if (!productData.title.trim()) {
+      setError("Vui lòng nhập tên sản phẩm");
+      return false;
+    }
+    if (!productData.price || parseFloat(productData.price) <= 0) {
+      setError("Vui lòng nhập giá gốc hợp lệ");
+      return false;
+    }
+    if (!productData.topLavelCategory) {
+      setError("Vui lòng chọn danh mục cấp 1");
+      return false;
+    }
+    if (!productData.secondLavelCategory) {
+      setError("Vui lòng chọn danh mục cấp 2");
+      return false;
+    }
+    if (!productData.thirdLavelCategory) {
+      setError("Vui lòng chọn danh mục cấp 3");
+      return false;
+    }
+    return true;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess(false);
+
+    if (!validateForm()) {
+      return;
     }
 
-    dispatch(createProduct(formData));
+    setLoading(true);
 
-    // Reset form
+    try {
+      const formData = new FormData();
+      
+      // Prepare product data
+      const productPayload = {
+        ...productData,
+        price: parseInt(productData.price),
+        discountedPrice: productData.discountedPrice
+          ? parseInt(productData.discountedPrice)
+          : parseInt(productData.price),
+        discountPersent: productData.discountPersent
+          ? parseInt(productData.discountPersent)
+          : 0,
+        quantity: productData.quantity ? parseInt(productData.quantity) : 0,
+        size: productData.size.map((s) => ({
+          name: s.name,
+          quantity: parseInt(s.quantity) || 0,
+        })),
+      };
+
+      formData.append(
+        "product",
+        new Blob([JSON.stringify(productPayload)], {
+          type: "application/json",
+        })
+      );
+
+      if (imageFile) {
+        formData.append("image", imageFile);
+      }
+
+      await dispatch(createProduct(formData));
+    } catch (err) {
+      setError(err.message || "Có lỗi xảy ra khi tạo sản phẩm");
+      setLoading(false);
+    }
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setError("Kích thước ảnh không được vượt quá 5MB");
+        return;
+      }
+      // Validate file type
+      if (!file.type.startsWith("image/")) {
+        setError("File phải là hình ảnh");
+        return;
+      }
+      setImageFile(file);
+      setProductData((prev) => ({
+        ...prev,
+        imageUrl: URL.createObjectURL(file),
+      }));
+      setError("");
+    }
+  };
+
+  const handleReset = () => {
     setProductData({
       imageUrl: "",
       brand: "",
@@ -109,18 +258,15 @@ const CreateProductForm = () => {
       description: "",
     });
     setImageFile(null);
+    setError("");
+    setSuccess(false);
   };
 
-
-  // Lấy danh mục cấp 1
+  // Lấy danh mục
   const categoryLevel1 = navigation.categories;
-
-  // Lấy danh mục cấp 2 dựa trên category cấp 1 đã chọn
   const categoryLevel2 =
     navigation.categories.find((cat) => cat.id === productData.topLavelCategory)
       ?.sections || [];
-
-  // Lấy danh mục cấp 3 dựa trên category cấp 2 đã chọn
   const categoryLevel3 =
     categoryLevel2.find((sec) => sec.id === productData.secondLavelCategory)
       ?.items || [];
@@ -129,311 +275,611 @@ const CreateProductForm = () => {
     <Fragment>
       <Box
         sx={{
-          backgroundColor: "#f5f6fa",
+          backgroundColor: "#f8fafc",
           minHeight: "100vh",
           display: "flex",
           justifyContent: "center",
           alignItems: "flex-start",
-          py: 6,
+          py: 4,
+          px: 2,
         }}
       >
         <Paper
-          elevation={5}
+          elevation={0}
           sx={{
             width: "100%",
             maxWidth: 1100,
-            padding: "25px 60px",
+            padding: { xs: 3, md: 4 },
             borderRadius: 4,
             backgroundColor: "#fff",
+            border: "1px solid #e2e8f0",
+            boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
           }}
         >
-          <Typography
-            variant="h4"
-            align="center"
-            sx={{
-              mb: 2,
-              fontWeight: "bold",
-              color: "#1976d2",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              gap: 1,
-              marginBottom: 0,
-            }}
-          >
-            Thêm sản phẩm mới
-          </Typography>
-          <Divider sx={{ mb: 4 }} />
+          {/* Header */}
+          <Box sx={{ mb: 4, pb: 3, borderBottom: "2px solid #e2e8f0" }}>
+            <Typography
+              variant="h4"
+              sx={{
+                fontWeight: 700,
+                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                mb: 0.5,
+                display: "flex",
+                alignItems: "center",
+                gap: 1.5,
+                fontSize: { xs: "1.75rem", md: "2rem" },
+              }}
+            >
+              <AddIcon sx={{ fontSize: 32, color: "#667eea" }} />
+              Thêm sản phẩm mới
+            </Typography>
+            <Typography variant="body2" sx={{ color: "#64748b", mt: 1 }}>
+              Điền thông tin chi tiết để thêm sản phẩm mới vào hệ thống
+            </Typography>
+          </Box>
+
+          {/* Alerts */}
+          {error && (
+            <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError("")}>
+              {error}
+            </Alert>
+          )}
+          {success && (
+            <Alert severity="success" sx={{ mb: 3 }}>
+              Thêm sản phẩm thành công! Đang chuyển hướng...
+            </Alert>
+          )}
 
           <form onSubmit={handleSubmit}>
-            <Grid
-              sx={{ display: "flex", flexDirection: "column", gap: "20px" }}
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", lg: "1fr 1fr" },
+                gap: 3,
+              }}
             >
-              {/* Đường dẫn ảnh */}
-              <Grid item xs={12}>
-                <Button
-                  variant="outlined"
-                  component="label"
-                  fullWidth
-                  sx={{ textTransform: "none" }}
-                >
-                  {imageFile ? imageFile.name : "Chọn ảnh sản phẩm"}
-                  <input
-                    type="file"
-                    hidden
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files[0];
-                      if (file) {
-                        setImageFile(file); // giữ file thật để gửi FormData
-                        setProductData((prev) => ({
-                          ...prev,
-                          imageUrl: URL.createObjectURL(file), // chỉ để preview
-                        }));
-                      }
-                    }}
-                  />
-                </Button>
-
-                {/* Hiển thị ảnh xem trước */}
-                {productData.imageUrl && (
-                  <Box sx={{ mt: 2, textAlign: "center" }}>
-                    <img
-                      src={productData.imageUrl}
-                      alt="preview"
-                      style={{
-                        maxWidth: "200px",
-                        maxHeight: "200px",
-                        borderRadius: "10px",
-                        objectFit: "cover",
-                      }}
-                    />
-                  </Box>
-                )}
-              </Grid>
-
-              {/* Thương hiệu - Tên sản phẩm */}
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Thương hiệu"
-                  name="brand"
-                  value={productData.brand}
-                  onChange={handleChange}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Tên sản phẩm"
-                  name="title"
-                  value={productData.title}
-                  onChange={handleChange}
-                />
-              </Grid>
-
-              {/* Màu sắc - Số lượng tổng */}
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Màu sắc"
-                  name="color"
-                  value={productData.color}
-                  onChange={handleChange}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Số lượng tổng"
-                  name="quantity"
-                  type="number"
-                  value={productData.quantity}
-                  onChange={handleChange}
-                />
-              </Grid>
-
-              {/* Giá gốc - Giá KM - % giảm */}
-              <Grid spacing={2} sx={{ display: "flex", gap: "20px" }}>
-                <div className="col-md-3">
-                  <TextField
-                    fullWidth
-                    label="Giá gốc (VNĐ)"
-                    name="price"
-                    type="number"
-                    value={productData.price}
-                    onChange={handleChange}
-                  />
-                </div>
-
-                <div className="col-md-3">
-                  <TextField
-                    fullWidth
-                    label="Giá khuyến mãi (VNĐ)"
-                    name="discountedPrice"
-                    type="number"
-                    value={productData.discountedPrice}
-                    onChange={handleChange}
-                  />
-                </div>
-
-                <div className="col-md-3">
-                  <TextField
-                    fullWidth
-                    label="Phần trăm giảm giá (%)"
-                    name="discountPersent"
-                    type="number"
-                    value={productData.discountPersent}
-                    onChange={handleChange}
-                  />
-                </div>
-              </Grid>
-
-              {/* 3 Select: Danh mục cấp 1 - 2 - 3 */}
-              <Grid spacing={2} sx={{ display: "flex", gap: "20px" }}>
-                <div className="col-md-3">
-                  <FormControl variant="outlined" fullWidth>
-                    <InputLabel id="topLavelCategory-label">
-                      Danh mục cấp 1
-                    </InputLabel>
-                    <Select
-                      labelId="topLavelCategory-label"
-                      label="Danh mục cấp 1"
-                      name="topLavelCategory"
-                      value={productData.topLavelCategory}
-                      onChange={handleChange}
-                    >
-                      {categoryLevel1.map((item) => (
-                        <MenuItem key={item.id} value={item.id}>
-                          {item.name}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </div>
-
-                <div className="col-md-3">
-                  <FormControl variant="outlined" fullWidth>
-                    <InputLabel id="secondLavelCategory-label">
-                      Danh mục cấp 2
-                    </InputLabel>
-                    <Select
-                      labelId="secondLavelCategory-label"
-                      label="Danh mục cấp 2"
-                      name="secondLavelCategory"
-                      value={productData.secondLavelCategory}
-                      onChange={handleChange}
-                    >
-                      {categoryLevel2.map((sec) => (
-                        <MenuItem key={sec.id} value={sec.id}>
-                          {sec.name}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </div>
-
-                <div className="col-md-3">
-                  <FormControl variant="outlined" fullWidth>
-                    <InputLabel id="thirdLavelCategory-label">
-                      Danh mục cấp 3
-                    </InputLabel>
-                    <Select
-                      labelId="thirdLavelCategory-label"
-                      label="Danh mục cấp 3"
-                      name="thirdLavelCategory"
-                      value={productData.thirdLavelCategory}
-                      onChange={handleChange}
-                    >
-                      {categoryLevel3.map((item) => (
-                        <MenuItem key={item.id} value={item.id}>
-                          {item.name}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </div>
-              </Grid>
-
-              {/* Mô tả */}
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  multiline
-                  rows={3}
-                  label="Mô tả sản phẩm"
-                  name="description"
-                  value={productData.description}
-                  onChange={handleChange}
-                />
-              </Grid>
-
-              {/* Kích cỡ & số lượng */}
-              <Grid item xs={12}>
-                <Typography
-                  variant="h6"
-                  sx={{ fontWeight: 600, mt: 3, mb: 1, color: "#333" }}
-                >
-                  Kích cỡ & Số lượng
-                </Typography>
-              </Grid>
-
-              {productData.size.map((size, index) => (
-                <Grid
-                  container
-                  item
-                  spacing={2}
-                  key={index}
-                  sx={{ pl: 2, pr: 2 }}
-                >
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      label="Size"
-                      name="name"
-                      value={size.name}
-                      disabled
-                      onChange={(e) => handleSizeChange(e, index)}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      label="Số lượng"
-                      name="quantity"
-                      type="number"
-                      value={size.quantity}
-                      onChange={(e) => handleSizeChange(e, index)}
-                    />
-                  </Grid>
-                </Grid>
-              ))}
-
-              {/* Nút submit căn giữa */}
-              <Grid item xs={12}>
-                <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    size="large"
+              {/* Left Column */}
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                {/* Image Upload */}
+                <Box>
+                  <Typography
+                    variant="subtitle1"
+                    sx={{ fontWeight: 600, mb: 1.5, color: "#334155" }}
+                  >
+                    Hình ảnh sản phẩm
+                  </Typography>
+                  <Card
                     sx={{
-                      px: 6,
-                      py: 1.8,
-                      fontSize: "1rem",
-                      fontWeight: 600,
-                      borderRadius: 3,
-                      background: "linear-gradient(90deg, #1976d2, #42a5f5)",
-                      boxShadow: "0 4px 10px rgba(25,118,210,0.3)",
+                      border: "1.5px dashed #cbd5e1",
+                      borderRadius: 2,
+                      p: 3,
+                      textAlign: "center",
+                      backgroundColor: "#f8fafc",
+                      cursor: "pointer",
+                      transition: "all 0.2s",
                       "&:hover": {
-                        background: "linear-gradient(90deg, #1258a6, #1e88e5)",
+                        borderColor: "#667eea",
+                        backgroundColor: "#f1f5f9",
+                      },
+                    }}
+                    onClick={() => document.getElementById("image-upload")?.click()}
+                  >
+                    <input
+                      type="file"
+                      id="image-upload"
+                      hidden
+                      accept="image/*"
+                      onChange={handleImageChange}
+                    />
+                    {!productData.imageUrl ? (
+                      <Box>
+                        <CloudUploadIcon sx={{ fontSize: 40, color: "#94a3b8", mb: 1 }} />
+                        <Typography variant="body2" sx={{ color: "#64748b", mb: 0.5 }}>
+                          {imageFile ? imageFile.name : "Click để chọn ảnh"}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: "#94a3b8" }}>
+                          PNG, JPG, GIF tối đa 5MB
+                        </Typography>
+                      </Box>
+                    ) : (
+                      <Box>
+                        <CardMedia
+                          component="img"
+                          image={productData.imageUrl}
+                          alt="Preview"
+                          sx={{
+                            maxWidth: "100%",
+                            maxHeight: 250,
+                            borderRadius: 1.5,
+                            margin: "0 auto",
+                            objectFit: "cover",
+                            boxShadow: 2,
+                          }}
+                        />
+                        <Button
+                          variant="text"
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            document.getElementById("image-upload")?.click();
+                          }}
+                          sx={{ mt: 1, textTransform: "none" }}
+                        >
+                          Đổi ảnh
+                        </Button>
+                      </Box>
+                    )}
+                  </Card>
+                </Box>
+
+                {/* Basic Info Table */}
+                <Box>
+                  <Typography
+                    variant="subtitle1"
+                    sx={{ fontWeight: 600, mb: 1.5, color: "#334155" }}
+                  >
+                    Thông tin cơ bản
+                  </Typography>
+                  <Box
+                    component="table"
+                    sx={{
+                      width: "100%",
+                      borderCollapse: "collapse",
+                      "& tr": {
+                        borderBottom: "1px solid #e2e8f0",
+                      },
+                      "& tr:last-child": {
+                        borderBottom: "none",
+                      },
+                      "& td": {
+                        padding: "12px 0",
+                        verticalAlign: "middle",
+                      },
+                      "& td:first-of-type": {
+                        width: "40%",
+                        fontWeight: 500,
+                        color: "#475569",
+                        fontSize: "0.9rem",
                       },
                     }}
                   >
-                    ➕ Thêm sản phẩm
-                  </Button>
+                    <tbody>
+                      <tr>
+                        <td>Thương hiệu *</td>
+                        <td>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            name="brand"
+                            value={productData.brand}
+                            onChange={handleChange}
+                            required
+                            variant="outlined"
+                          />
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>Tên sản phẩm *</td>
+                        <td>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            name="title"
+                            value={productData.title}
+                            onChange={handleChange}
+                            required
+                            variant="outlined"
+                          />
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>Màu sắc</td>
+                        <td>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            name="color"
+                            value={productData.color}
+                            onChange={handleChange}
+                            variant="outlined"
+                          />
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>Số lượng tổng</td>
+                        <td>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            name="quantity"
+                            type="number"
+                            value={productData.quantity}
+                            onChange={handleChange}
+                            variant="outlined"
+                            inputProps={{ min: 0 }}
+                          />
+                        </td>
+                      </tr>
+                    </tbody>
+                  </Box>
                 </Box>
-              </Grid>
-            </Grid>
+
+                {/* Pricing Table */}
+                <Box>
+                  <Typography
+                    variant="subtitle1"
+                    sx={{ fontWeight: 600, mb: 1.5, color: "#334155" }}
+                  >
+                    Giá cả
+                  </Typography>
+                  <Box
+                    component="table"
+                    sx={{
+                      width: "100%",
+                      borderCollapse: "collapse",
+                      "& tr": {
+                        borderBottom: "1px solid #e2e8f0",
+                      },
+                      "& tr:last-child": {
+                        borderBottom: "none",
+                      },
+                      "& td": {
+                        padding: "12px 0",
+                        verticalAlign: "middle",
+                      },
+                      "& td:first-of-type": {
+                        width: "40%",
+                        fontWeight: 500,
+                        color: "#475569",
+                        fontSize: "0.9rem",
+                      },
+                    }}
+                  >
+                    <tbody>
+                      <tr>
+                        <td>Giá gốc (VNĐ) *</td>
+                        <td>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            name="price"
+                            type="number"
+                            value={productData.price}
+                            onChange={handleChange}
+                            required
+                            variant="outlined"
+                            inputProps={{ min: 0 }}
+                          />
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>Giá khuyến mãi (VNĐ)</td>
+                        <td>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            name="discountedPrice"
+                            type="number"
+                            value={productData.discountedPrice}
+                            onChange={handleChange}
+                            variant="outlined"
+                            inputProps={{ min: 0 }}
+                          />
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>Giảm giá (%)</td>
+                        <td>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            name="discountPersent"
+                            type="number"
+                            value={productData.discountPersent}
+                            disabled
+                            variant="outlined"
+                            helperText="Tự động tính"
+                            sx={{
+                              "& .MuiInputBase-root": {
+                                backgroundColor: "#f8fafc",
+                              },
+                            }}
+                          />
+                        </td>
+                      </tr>
+                    </tbody>
+                  </Box>
+                </Box>
+              </Box>
+
+              {/* Right Column */}
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                {/* Categories */}
+                <Box>
+                  <Typography
+                    variant="subtitle1"
+                    sx={{ fontWeight: 600, mb: 1.5, color: "#334155" }}
+                  >
+                    Danh mục sản phẩm
+                  </Typography>
+                  <Box
+                    component="table"
+                    sx={{
+                      width: "100%",
+                      borderCollapse: "collapse",
+                      "& tr": {
+                        borderBottom: "1px solid #e2e8f0",
+                      },
+                      "& tr:last-child": {
+                        borderBottom: "none",
+                      },
+                      "& td": {
+                        padding: "12px 0",
+                        verticalAlign: "middle",
+                      },
+                      "& td:first-of-type": {
+                        width: "40%",
+                        fontWeight: 500,
+                        color: "#475569",
+                        fontSize: "0.9rem",
+                      },
+                    }}
+                  >
+                    <tbody>
+                      <tr>
+                        <td>Danh mục cấp 1 *</td>
+                        <td>
+                          <FormControl fullWidth size="small" variant="outlined" required>
+                            <Select
+                              name="topLavelCategory"
+                              value={productData.topLavelCategory}
+                              onChange={handleChange}
+                            >
+                              {categoryLevel1.map((item) => (
+                                <MenuItem key={item.id} value={item.id}>
+                                  {item.name}
+                                </MenuItem>
+                              ))}
+                            </Select>
+                          </FormControl>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>Danh mục cấp 2 *</td>
+                        <td>
+                          <FormControl
+                            fullWidth
+                            size="small"
+                            variant="outlined"
+                            required
+                            disabled={!productData.topLavelCategory}
+                          >
+                            <Select
+                              name="secondLavelCategory"
+                              value={productData.secondLavelCategory}
+                              onChange={handleChange}
+                            >
+                              {categoryLevel2.map((sec) => (
+                                <MenuItem key={sec.id} value={sec.id}>
+                                  {sec.name}
+                                </MenuItem>
+                              ))}
+                            </Select>
+                          </FormControl>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>Danh mục cấp 3 *</td>
+                        <td>
+                          <FormControl
+                            fullWidth
+                            size="small"
+                            variant="outlined"
+                            required
+                            disabled={!productData.secondLavelCategory}
+                          >
+                            <Select
+                              name="thirdLavelCategory"
+                              value={productData.thirdLavelCategory}
+                              onChange={handleChange}
+                            >
+                              {categoryLevel3.map((item) => (
+                                <MenuItem key={item.id} value={item.id}>
+                                  {item.name}
+                                </MenuItem>
+                              ))}
+                            </Select>
+                          </FormControl>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </Box>
+                </Box>
+
+                {/* Description */}
+                <Box>
+                  <Typography
+                    variant="subtitle1"
+                    sx={{ fontWeight: 600, mb: 1.5, color: "#334155" }}
+                  >
+                    Mô tả sản phẩm
+                  </Typography>
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={6}
+                    name="description"
+                    value={productData.description}
+                    onChange={handleChange}
+                    variant="outlined"
+                    placeholder="Nhập mô tả chi tiết về sản phẩm..."
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        fontSize: "0.9rem",
+                      },
+                    }}
+                  />
+                </Box>
+
+                {/* Sizes */}
+                <Box>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      mb: 1.5,
+                    }}
+                  >
+                    <Typography
+                      variant="subtitle1"
+                      sx={{ fontWeight: 600, color: "#334155" }}
+                    >
+                      Kích cỡ & Số lượng
+                    </Typography>
+                    <Button
+                      startIcon={<AddIcon />}
+                      onClick={addSize}
+                      variant="outlined"
+                      size="small"
+                      sx={{
+                        textTransform: "none",
+                        fontSize: "0.85rem",
+                        py: 0.5,
+                      }}
+                    >
+                      Thêm size
+                    </Button>
+                  </Box>
+                  <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+                    {productData.size.map((size, index) => (
+                      <Box
+                        key={index}
+                        sx={{
+                          display: "flex",
+                          gap: 1.5,
+                          alignItems: "center",
+                          p: 1.5,
+                          border: "1px solid #e2e8f0",
+                          borderRadius: 1.5,
+                          backgroundColor: "#f8fafc",
+                        }}
+                      >
+                        <TextField
+                          size="small"
+                          label="Size"
+                          name="name"
+                          value={size.name}
+                          onChange={(e) => handleSizeChange(e, index)}
+                          sx={{ flex: 1 }}
+                          placeholder="S, M, L..."
+                        />
+                        <TextField
+                          size="small"
+                          label="Số lượng"
+                          name="quantity"
+                          type="number"
+                          value={size.quantity}
+                          onChange={(e) => handleSizeChange(e, index)}
+                          sx={{ flex: 1 }}
+                          inputProps={{ min: 0 }}
+                        />
+                        <IconButton
+                          onClick={() => removeSize(index)}
+                          color="error"
+                          size="small"
+                          disabled={productData.size.length === 1}
+                          sx={{
+                            "&:hover": {
+                              backgroundColor: "#fee2e2",
+                            },
+                          }}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    ))}
+                  </Box>
+                </Box>
+              </Box>
+            </Box>
+
+            {/* Action Buttons */}
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                gap: 2,
+                mt: 4,
+                pt: 3,
+                borderTop: "2px solid #e2e8f0",
+                gridColumn: "1 / -1",
+              }}
+            >
+              <Button
+                type="button"
+                variant="outlined"
+                onClick={handleReset}
+                size="large"
+                disabled={loading}
+                sx={{
+                  px: 5,
+                  py: 1.5,
+                  textTransform: "none",
+                  fontSize: "1rem",
+                  fontWeight: 600,
+                  borderRadius: 2,
+                  borderColor: "#cbd5e1",
+                  color: "#475569",
+                  "&:hover": {
+                    borderColor: "#94a3b8",
+                    backgroundColor: "#f8fafc",
+                  },
+                }}
+              >
+                Đặt lại
+              </Button>
+              <Button
+                type="submit"
+                variant="contained"
+                size="large"
+                disabled={loading}
+                sx={{
+                  px: 6,
+                  py: 1.5,
+                  fontSize: "1rem",
+                  fontWeight: 600,
+                  borderRadius: 2,
+                  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                  boxShadow: "0 4px 15px rgba(102, 126, 234, 0.4)",
+                  textTransform: "none",
+                  "&:hover": {
+                    background: "linear-gradient(135deg, #5568d3 0%, #6a4190 100%)",
+                    boxShadow: "0 6px 20px rgba(102, 126, 234, 0.6)",
+                    transform: "translateY(-2px)",
+                  },
+                  "&:disabled": {
+                    background: "#cbd5e1",
+                    boxShadow: "none",
+                  },
+                  transition: "all 0.3s ease",
+                }}
+              >
+                {loading ? (
+                  <>
+                    <CircularProgress size={20} sx={{ mr: 1, color: "#fff" }} />
+                    Đang tạo...
+                  </>
+                ) : (
+                  <>
+                    <AddIcon sx={{ mr: 1 }} />
+                    Thêm sản phẩm
+                  </>
+                )}
+              </Button>
+            </Box>
           </form>
         </Paper>
       </Box>
