@@ -18,7 +18,6 @@ import { useNavigate, useLocation, Routes, Route } from "react-router-dom";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import PersonIcon from "@mui/icons-material/Person";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
-import CategoryIcon from "@mui/icons-material/Category";
 import InventoryIcon from "@mui/icons-material/Inventory";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import CreateProductForm from "./components/CreateProductForm";
@@ -35,11 +34,6 @@ const menu = [
   { name: "Sản phẩm", link: "/admin/products", icon: <InventoryIcon /> },
   { name: "Người dùng", link: "/admin/customers", icon: <PersonIcon /> },
   { name: "Đơn hàng", link: "/admin/orders", icon: <ShoppingCartIcon /> },
-  {
-    name: "Thêm sản phẩm",
-    link: "/admin/products/create",
-    icon: <CategoryIcon />,
-  },
 ];
 
 const Admin = () => {
@@ -127,6 +121,7 @@ const Admin = () => {
         <Routes>
           <Route path="/" element={<AdminDashboard />} />
           <Route path="/products/create" element={<CreateProductForm />} />
+          <Route path="/products/edit/:productId" element={<CreateProductForm />} />
           <Route path="/products" element={<ProductsTable />} />
           <Route path="/orders" element={<OrdersTable />} />
           <Route path="/customers" element={<CustomersTable />} />

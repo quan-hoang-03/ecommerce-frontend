@@ -1,6 +1,6 @@
 import { api, API_BASE_URL } from "../../../config/apiConfig";
 import { CREATE_ORDER_SUCCESS } from "../Order/ActionType";
-import { CREATE_PRODUCT_FAILURE, CREATE_PRODUCT_REQUEST, CREATE_PRODUCT_SUCCESS, DELETE_PRODUCT_SUCCESS } from "./ActionType";
+import { CREATE_PRODUCT_FAILURE, CREATE_PRODUCT_REQUEST, CREATE_PRODUCT_SUCCESS, DELETE_PRODUCT_SUCCESS, UPDATE_PRODUCT_REQUEST, UPDATE_PRODUCT_SUCCESS, UPDATE_PRODUCT_FAILURE, RESET_PRODUCT_STATE } from "./ActionType";
 
 export const findProduct=(reqData)=>async(dispatch)=>{
   //(dispatch) => { ... }: Redux Thunk cho phép bạn trả về một hàm, chứ không chỉ là một object.
@@ -65,9 +65,29 @@ export const createProduct = (formData) => async (dispatch) => {
     });
     console.log("Created product:", data);
     dispatch({ type: "CREATE_PRODUCT_SUCCESS", payload: data });
+    return { success: true, data };
   } catch (e) {
     console.error(e);
-    dispatch({ type: "CREATE_PRODUCT_FAILURE", payload: e.message });
+    const errorMessage = e.response?.data?.message || e.message || "Có lỗi xảy ra khi tạo sản phẩm";
+    dispatch({ type: "CREATE_PRODUCT_FAILURE", payload: errorMessage });
+    throw e;
+  }
+};
+
+export const updateProduct = (productId, formData) => async (dispatch) => {
+  try {
+    dispatch({ type: UPDATE_PRODUCT_REQUEST });
+    const { data } = await api.put(`/api/admin/products/${productId}`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    console.log("Updated product:", data);
+    dispatch({ type: UPDATE_PRODUCT_SUCCESS, payload: data });
+    return { success: true, data };
+  } catch (e) {
+    console.error(e);
+    const errorMessage = e.response?.data?.message || e.message || "Có lỗi xảy ra khi cập nhật sản phẩm";
+    dispatch({ type: UPDATE_PRODUCT_FAILURE, payload: errorMessage });
+    throw e;
   }
 };
 
@@ -84,4 +104,8 @@ export const deleteProduct = (productId) => async (dispatch) => {
   } catch (e) {
     dispatch({ type: "DELETE_PRODUCT_FAILURE", payload: e.message });
   }
+};
+
+export const resetProductState = () => (dispatch) => {
+  dispatch({ type: RESET_PRODUCT_STATE });
 }; 
