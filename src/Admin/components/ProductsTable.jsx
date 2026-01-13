@@ -18,7 +18,9 @@ import {
   DialogContentText,
   DialogActions,
   Snackbar,
-  Alert
+  Alert,
+  Pagination,
+  Typography
 } from '@mui/material';
 import React, { useEffect, useState } from 'react'
 import { deleteProduct, findProduct } from '../../customer/State/Products/Action';
@@ -37,11 +39,18 @@ const ProductsTable = () => {
     const decodedQueryString = decodeURIComponent(location.search);
     const searchParams = new URLSearchParams(decodedQueryString);
     const priceValue = searchParams.get("price");
-    const pageNumber = Number(searchParams.get("page")) || 1;
+    const [currentPage, setCurrentPage] = useState(Number(searchParams.get("page")) || 1);
+    const itemsPerPage = 10;
     const [products, setProducts] = useState([]);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [productToDelete, setProductToDelete] = useState(null);
     const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
+
+    // Tính toán phân trang
+    const totalPages = Math.ceil(products.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedProducts = products.slice(startIndex, endIndex);
 
      useEffect(() => {
         const token = localStorage.getItem("jwt");
@@ -53,9 +62,23 @@ const ProductsTable = () => {
          })
          .then((res) => {
            setProducts(res.data);
+           // Reset về trang 1 nếu trang hiện tại không hợp lệ
+           const maxPage = Math.ceil(res.data.length / itemsPerPage);
+           if (currentPage > maxPage && maxPage > 0) {
+             setCurrentPage(1);
+             navigate("/admin/products?page=1");
+           }
          })
          .catch((err) => console.error("Lỗi khi load sản phẩm:", err));
      }, []);
+
+     // Sync currentPage với URL params
+     useEffect(() => {
+       const pageFromUrl = Number(searchParams.get("page")) || 1;
+       if (pageFromUrl !== currentPage) {
+         setCurrentPage(pageFromUrl);
+       }
+     }, [location.search]);
 
    const handleDeleteClick = (productId) => {
      setProductToDelete(productId);
@@ -67,7 +90,17 @@ const ProductsTable = () => {
 
      try {
        await dispatch(deleteProduct(productToDelete));
-       setProducts((prev) => prev.filter((p) => p.id !== productToDelete));
+       const updatedProducts = products.filter((p) => p.id !== productToDelete);
+       setProducts(updatedProducts);
+       
+       // Kiểm tra nếu trang hiện tại trống sau khi xóa
+       const maxPage = Math.ceil(updatedProducts.length / itemsPerPage);
+       if (currentPage > maxPage && maxPage > 0) {
+         const newPage = maxPage;
+         setCurrentPage(newPage);
+         navigate(`/admin/products?page=${newPage}`);
+       }
+       
        setSnackbar({
          open: true,
          message: "Đã xóa sản phẩm thành công!",
@@ -97,6 +130,13 @@ const ProductsTable = () => {
        return;
      }
      setSnackbar({ ...snackbar, open: false });
+   };
+
+   const handlePageChange = (event, value) => {
+     setCurrentPage(value);
+     navigate(`/admin/products?page=${value}`);
+     // Scroll to top khi đổi trang
+     window.scrollTo({ top: 0, behavior: 'smooth' });
    };
 
   return (
@@ -156,7 +196,16 @@ const ProductsTable = () => {
           </TableHead>
 
           <TableBody>
-            {products.map((item) => (
+            {paginatedProducts.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                  <Typography variant="body1" color="text.secondary">
+                    Không có sản phẩm nào
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            ) : (
+              paginatedProducts.map((item) => (
               <TableRow
                 key={item.name}
                 sx={{
@@ -167,7 +216,7 @@ const ProductsTable = () => {
               >
                 <TableCell align="center">
                   <Avatar
-                    src={item.imageUrl}
+                    src={item.imageUrl ? (item.imageUrl.startsWith('http') ? item.imageUrl : `${API_BASE_URL}${item.imageUrl}`) : ''}
                     alt={item.title}
                     sx={{
                       width: 50,
@@ -175,7 +224,9 @@ const ProductsTable = () => {
                       borderRadius: 2,
                       boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
                     }}
-                  />
+                  >
+                    {!item.imageUrl && item.title?.charAt(0).toUpperCase()}
+                  </Avatar>
                 </TableCell>
 
                 <TableCell align="left" scope="row">
@@ -231,10 +282,72 @@ const ProductsTable = () => {
                   </Box>
                 </TableCell>
               </TableRow>
-            ))}
+            )))}
           </TableBody>
         </Table>
       </TableContainer>
+
+      {/* Pagination */}
+      {products.length > 0 && (
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mt: 2,
+            px: 2,
+            py: 1.5,
+            bgcolor: "white",
+            borderRadius: 2,
+            boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+          }}
+        >
+          <Typography 
+            variant="body2" 
+            color="text.secondary"
+            sx={{ 
+              fontSize: "0.875rem",
+              fontWeight: 400,
+            }}
+          >
+            Hiển thị <strong>{startIndex + 1}</strong> - <strong>{Math.min(endIndex, products.length)}</strong> trong tổng số <strong>{products.length}</strong> sản phẩm
+          </Typography>
+          <Pagination
+            count={totalPages}
+            page={currentPage}
+            onChange={handlePageChange}
+            color="primary"
+            shape="rounded"
+            size="small"
+            showFirstButton={totalPages > 5}
+            showLastButton={totalPages > 5}
+            siblingCount={1}
+            boundaryCount={1}
+            sx={{
+              "& .MuiPaginationItem-root": {
+                fontSize: "0.875rem",
+                minWidth: "32px",
+                height: "32px",
+                fontWeight: 400,
+                "&.Mui-selected": {
+                  fontWeight: 600,
+                  backgroundColor: "#667eea",
+                  color: "white",
+                  "&:hover": {
+                    backgroundColor: "#5568d3",
+                  },
+                },
+                "&:hover": {
+                  backgroundColor: "#f3f4f6",
+                },
+              },
+              "& .MuiPaginationItem-ellipsis": {
+                fontSize: "0.875rem",
+              },
+            }}
+          />
+        </Box>
+      )}
 
       {/* Delete Confirmation Dialog */}
       <Dialog

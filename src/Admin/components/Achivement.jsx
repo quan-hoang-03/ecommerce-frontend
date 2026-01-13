@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Button,
   Card,
@@ -6,8 +6,10 @@ import {
   Typography,
   Box,
   styled,
+  CircularProgress,
 } from "@mui/material";
 import avt from "../../assets/img/avt.jpg"; // ảnh cúp (bạn có thể đổi đường dẫn)
+import { useNavigate } from "react-router-dom";
 
 const TrophyImg = styled("img")({
   height: 90,
@@ -18,7 +20,21 @@ const TrophyImg = styled("img")({
   borderRadius: "50%",
 });
 
-const Achievement = () => {
+const Achievement = ({ stats, loading }) => {
+  const navigate = useNavigate();
+  
+  // Tổng doanh số = tổng số lượng hàng bán được hoặc tổng giá trị đơn hàng
+  const totalSales = stats?.totalSalesQuantity || stats?.totalSalesValue || 0;
+
+  const formatNumber = (num) => {
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(1) + "M";
+    } else if (num >= 1000) {
+      return (num / 1000).toFixed(1) + "k";
+    }
+    return num?.toLocaleString("vi-VN") || "0";
+  };
+
   return (
     <Card
       sx={{
@@ -43,11 +59,19 @@ const Achievement = () => {
         <Typography variant="body2" sx={{ mb: 1 }}>
           Xin chúc mừng 🎉
         </Typography>
-        <Typography variant="h5" fontWeight={700} sx={{ mb: 1 }}>
-          420.8k
-        </Typography>
-        <Button variant="contained" size="small">
-          VIEW SALES
+        {loading ? (
+          <CircularProgress size={24} sx={{ color: "#fff", mb: 1 }} />
+        ) : (
+          <Typography variant="h5" fontWeight={700} sx={{ mb: 1 }}>
+            {formatNumber(totalSales)}
+          </Typography>
+        )}
+        <Button 
+          variant="contained" 
+          size="small"
+          onClick={() => navigate("/admin/products")}
+        >
+          XEM SẢN PHẨM
         </Button>
       </CardContent>
 
