@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import AliceCarousel from "react-alice-carousel";
 import HomeSectionCard from '../HomeSectionCard/HomeSectionCard';
 import "./style.css"
@@ -7,6 +7,8 @@ import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
 
 const HomeSectionCarousel = ({ data, sectionName }) => {
   const [activeIndex, setActiveIndex] = useState(0);
+  const carouselRef = useRef(null);
+  
   const responsive = {
     0: { items: 1 },
     568: { items: 3 },
@@ -14,11 +16,15 @@ const HomeSectionCarousel = ({ data, sectionName }) => {
   };
 
   const slidePrev = () => {
-    setActiveIndex(activeIndex - 1);
+    if (carouselRef.current) {
+      carouselRef.current.slidePrev();
+    }
   };
 
   const slideNext = () => {
-    setActiveIndex(activeIndex + 1);
+    if (carouselRef.current) {
+      carouselRef.current.slideNext();
+    }
   };
 
   const syncActiveIndex = ({ item }) => {
@@ -29,9 +35,19 @@ const HomeSectionCarousel = ({ data, sectionName }) => {
     .slice(0, 10)
     .map((item, index) => <HomeSectionCard key={item.id || index} product={item} />);
   
-  // Kiểm tra có thể slide tiếp không (giả sử hiển thị tối đa 5 items)
-  const maxVisibleItems = 5;
-  const canSlideNext = activeIndex < items.length - maxVisibleItems;
+  // Tính toán số items hiển thị dựa trên responsive
+  const getItemsToShow = () => {
+    if (typeof window !== 'undefined') {
+      if (window.innerWidth >= 1024) return 5.5;
+      if (window.innerWidth >= 568) return 3;
+      return 1;
+    }
+    return 5.5;
+  };
+
+  const itemsToShow = getItemsToShow();
+  const maxIndex = Math.max(0, items.length - Math.ceil(itemsToShow));
+  const canSlideNext = activeIndex < maxIndex;
   const canSlidePrev = activeIndex > 0;
 
   return (
@@ -67,6 +83,7 @@ const HomeSectionCarousel = ({ data, sectionName }) => {
       </div>
       <div className="relative px-2">
         <AliceCarousel
+          ref={carouselRef}
           items={items}
           disableButtonsControls
           responsive={responsive}
@@ -75,6 +92,7 @@ const HomeSectionCarousel = ({ data, sectionName }) => {
           activeIndex={activeIndex}
           mouseTracking
           animationDuration={800}
+          controlsStrategy="responsive"
         />
       </div>
     </div>
