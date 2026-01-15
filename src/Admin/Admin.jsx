@@ -19,11 +19,13 @@ import DashboardIcon from "@mui/icons-material/Dashboard";
 import PersonIcon from "@mui/icons-material/Person";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import InventoryIcon from "@mui/icons-material/Inventory";
+import WarehouseIcon from "@mui/icons-material/Warehouse";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import CreateProductForm from "./components/CreateProductForm";
 import ProductsTable from "./components/ProductsTable";
 import OrdersTable from "./components/OrdersTable";
 import CustomersTable from "./components/CustomersTable";
+import InventoryTable from "./components/InventoryTable";
 import AdminDashboard from "./components/Dashboard";
 import LogoutIcon from "@mui/icons-material/Logout";
 
@@ -32,6 +34,7 @@ import LogoutIcon from "@mui/icons-material/Logout";
 const menu = [
   { name: "Dashboard", link: "/admin", icon: <DashboardIcon /> },
   { name: "Sản phẩm", link: "/admin/products", icon: <InventoryIcon /> },
+  { name: "Quản lý kho", link: "/admin/inventory", icon: <WarehouseIcon /> },
   { name: "Người dùng", link: "/admin/customers", icon: <PersonIcon /> },
   { name: "Đơn hàng", link: "/admin/orders", icon: <ShoppingCartIcon /> },
 ];
@@ -123,6 +126,7 @@ const Admin = () => {
           <Route path="/products/create" element={<CreateProductForm />} />
           <Route path="/products/edit/:productId" element={<CreateProductForm />} />
           <Route path="/products" element={<ProductsTable />} />
+          <Route path="/inventory" element={<InventoryTable />} />
           <Route path="/orders" element={<OrdersTable />} />
           <Route path="/customers" element={<CustomersTable />} />
         </Routes>
