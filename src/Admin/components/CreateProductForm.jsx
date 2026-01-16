@@ -22,7 +22,7 @@ import {
   Card,
   CardMedia,
 } from "@mui/material";
-import { navigation } from "../../customer/components/Navigation/navigationData";
+import { api } from "../../config/apiConfig";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
@@ -42,8 +42,10 @@ const CreateProductForm = () => {
   const { products } = useSelector((store) => store);
   const [loading, setLoading] = useState(false);
   const [loadingProduct, setLoadingProduct] = useState(false);
+  const [loadingCategories, setLoadingCategories] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [categories, setCategories] = useState([]); // Categories from API
 
   const [productData, setProductData] = useState({
     imageUrl: "",
@@ -61,6 +63,23 @@ const CreateProductForm = () => {
     description: "",
   });
   const [imageFile, setImageFile] = useState(null);
+
+  // Fetch categories from API
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setLoadingCategories(true);
+        const { data } = await api.get("/api/admin/categories");
+        setCategories(data || []);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        setError("Không thể tải danh mục. Vui lòng thử lại.");
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   // Reset success state when component mounts or route changes
   useEffect(() => {
@@ -99,53 +118,32 @@ const CreateProductForm = () => {
         .then((res) => {
           const product = res.data;
           
-          // Tìm category IDs từ category name trong navigation
+          // Map category từ API vào form
           let topCategoryId = "";
           let secondCategoryId = "";
           let thirdCategoryId = "";
           
           if (product.category) {
-            // Tìm category level 3 (category hiện tại)
-            const categoryName = product.category.name;
-            for (const cat of navigation.categories) {
-              for (const section of cat.sections || []) {
-                for (const item of section.items || []) {
-                  if (item.name === categoryName || item.id === categoryName) {
-                    thirdCategoryId = item.id;
-                    secondCategoryId = section.id;
-                    topCategoryId = cat.id;
-                    break;
-                  }
-                }
-                if (thirdCategoryId) break;
-              }
-              if (thirdCategoryId) break;
-            }
+            const currentCategory = product.category;
             
-            // Nếu không tìm thấy bằng name, thử tìm bằng cách traverse category tree
-            if (!thirdCategoryId && product.category.parentCategory) {
-              const secondLevel = product.category.parentCategory;
-              const firstLevel = secondLevel?.parentCategory;
+            // Nếu là category level 3
+            if (currentCategory.level === 3 && currentCategory.parentCategory) {
+              thirdCategoryId = currentCategory.name;
+              const secondLevel = currentCategory.parentCategory;
+              secondCategoryId = secondLevel.name;
               
-              // Tìm trong navigation
-              for (const cat of navigation.categories) {
-                if (firstLevel && (cat.name === firstLevel.name || cat.id === firstLevel.name)) {
-                  topCategoryId = cat.id;
-                  for (const section of cat.sections || []) {
-                    if (secondLevel && (section.name === secondLevel.name || section.id === secondLevel.name)) {
-                      secondCategoryId = section.id;
-                      for (const item of section.items || []) {
-                        if (item.name === categoryName || item.id === categoryName) {
-                          thirdCategoryId = item.id;
-                          break;
-                        }
-                      }
-                      break;
-                    }
-                  }
-                  break;
-                }
+              if (secondLevel.parentCategory) {
+                topCategoryId = secondLevel.parentCategory.name;
               }
+            }
+            // Nếu là category level 2
+            else if (currentCategory.level === 2 && currentCategory.parentCategory) {
+              secondCategoryId = currentCategory.name;
+              topCategoryId = currentCategory.parentCategory.name;
+            }
+            // Nếu là category level 1
+            else if (currentCategory.level === 1) {
+              topCategoryId = currentCategory.name;
             }
           }
           
@@ -390,14 +388,16 @@ const CreateProductForm = () => {
     setSuccess(false);
   };
 
-  // Lấy danh mục
-  const categoryLevel1 = navigation.categories;
-  const categoryLevel2 =
-    navigation.categories.find((cat) => cat.id === productData.topLavelCategory)
-      ?.sections || [];
-  const categoryLevel3 =
-    categoryLevel2.find((sec) => sec.id === productData.secondLavelCategory)
-      ?.items || [];
+  // Transform categories from API to dropdown format
+  const categoryLevel1 = categories.filter(cat => cat.level === 1);
+  const categoryLevel2 = categories.filter(cat => 
+    cat.level === 2 && 
+    cat.parentCategory?.name === productData.topLavelCategory
+  );
+  const categoryLevel3 = categories.filter(cat => 
+    cat.level === 3 && 
+    cat.parentCategory?.name === productData.secondLavelCategory
+  );
 
   return (
     <Fragment>
@@ -772,12 +772,19 @@ const CreateProductForm = () => {
                               name="topLavelCategory"
                               value={productData.topLavelCategory}
                               onChange={handleChange}
+                              disabled={loadingCategories}
                             >
-                              {categoryLevel1.map((item) => (
-                                <MenuItem key={item.id} value={item.id}>
-                                  {item.name}
-                                </MenuItem>
-                              ))}
+                              {loadingCategories ? (
+                                <MenuItem disabled>Đang tải danh mục...</MenuItem>
+                              ) : categoryLevel1.length === 0 ? (
+                                <MenuItem disabled>Chưa có danh mục. Vui lòng thêm danh mục trước.</MenuItem>
+                              ) : (
+                                categoryLevel1.map((cat) => (
+                                  <MenuItem key={cat.id} value={cat.name}>
+                                    {cat.displayName || cat.name}
+                                  </MenuItem>
+                                ))
+                              )}
                             </Select>
                           </FormControl>
                         </td>
@@ -796,12 +803,17 @@ const CreateProductForm = () => {
                               name="secondLavelCategory"
                               value={productData.secondLavelCategory}
                               onChange={handleChange}
+                              disabled={loadingCategories}
                             >
-                              {categoryLevel2.map((sec) => (
-                                <MenuItem key={sec.id} value={sec.id}>
-                                  {sec.name}
-                                </MenuItem>
-                              ))}
+                              {categoryLevel2.length === 0 ? (
+                                <MenuItem disabled>Chọn danh mục cấp 1 trước</MenuItem>
+                              ) : (
+                                categoryLevel2.map((cat) => (
+                                  <MenuItem key={cat.id} value={cat.name}>
+                                    {cat.displayName || cat.name}
+                                  </MenuItem>
+                                ))
+                              )}
                             </Select>
                           </FormControl>
                         </td>
@@ -820,12 +832,17 @@ const CreateProductForm = () => {
                               name="thirdLavelCategory"
                               value={productData.thirdLavelCategory}
                               onChange={handleChange}
+                              disabled={loadingCategories}
                             >
-                              {categoryLevel3.map((item) => (
-                                <MenuItem key={item.id} value={item.id}>
-                                  {item.name}
-                                </MenuItem>
-                              ))}
+                              {categoryLevel3.length === 0 ? (
+                                <MenuItem disabled>Chọn danh mục cấp 2 trước</MenuItem>
+                              ) : (
+                                categoryLevel3.map((cat) => (
+                                  <MenuItem key={cat.id} value={cat.name}>
+                                    {cat.displayName || cat.name}
+                                  </MenuItem>
+                                ))
+                              )}
                             </Select>
                           </FormControl>
                         </td>

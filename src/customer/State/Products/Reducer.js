@@ -14,6 +14,12 @@ import {
   UPDATE_PRODUCT_SUCCESS,
   UPDATE_PRODUCT_FAILURE,
   RESET_PRODUCT_STATE,
+  FIND_PRODUCTS_BY_CATEGORY_NAME_REQUEST,
+  FIND_PRODUCTS_BY_CATEGORY_NAME_SUCCESS,
+  FIND_PRODUCTS_BY_CATEGORY_NAME_FAILURE,
+  FETCH_CATEGORIES_WITH_PRODUCTS_REQUEST,
+  FETCH_CATEGORIES_WITH_PRODUCTS_SUCCESS,
+  FETCH_CATEGORIES_WITH_PRODUCTS_FAILURE,
 } from "./ActionType";
 
 const initialState = {
@@ -22,6 +28,12 @@ const initialState = {
   loading: false,
   error: null,
   success: false,
+  // Store products by category name for homepage sections
+  productsByCategory: {},
+  categoryLoading: {},
+  // Categories that have products (for homepage)
+  categoriesWithProducts: [],
+  categoriesLoading: false,
 };
 
 export const customerProductReducer = (state = initialState, action) => {
@@ -70,6 +82,60 @@ export const customerProductReducer = (state = initialState, action) => {
 
     case RESET_PRODUCT_STATE:
       return { ...state, success: false, error: null, loading: false };
+
+    // Handle products by category name (for homepage sections)
+    case FIND_PRODUCTS_BY_CATEGORY_NAME_REQUEST:
+      return {
+        ...state,
+        categoryLoading: {
+          ...state.categoryLoading,
+          [action.payload]: true,
+        },
+      };
+
+    case FIND_PRODUCTS_BY_CATEGORY_NAME_SUCCESS:
+      return {
+        ...state,
+        productsByCategory: {
+          ...state.productsByCategory,
+          [action.payload.categoryName]: action.payload.products,
+        },
+        categoryLoading: {
+          ...state.categoryLoading,
+          [action.payload.categoryName]: false,
+        },
+      };
+
+    case FIND_PRODUCTS_BY_CATEGORY_NAME_FAILURE:
+      return {
+        ...state,
+        categoryLoading: {
+          ...state.categoryLoading,
+          [action.payload.categoryName]: false,
+        },
+        error: action.payload.error,
+      };
+
+    // Handle fetching categories with products
+    case FETCH_CATEGORIES_WITH_PRODUCTS_REQUEST:
+      return {
+        ...state,
+        categoriesLoading: true,
+      };
+
+    case FETCH_CATEGORIES_WITH_PRODUCTS_SUCCESS:
+      return {
+        ...state,
+        categoriesWithProducts: action.payload,
+        categoriesLoading: false,
+      };
+
+    case FETCH_CATEGORIES_WITH_PRODUCTS_FAILURE:
+      return {
+        ...state,
+        categoriesLoading: false,
+        error: action.payload,
+      };
 
     default:
       return state;

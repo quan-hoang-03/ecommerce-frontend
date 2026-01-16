@@ -1,13 +1,33 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
+import { useDispatch, useSelector } from 'react-redux';
 import AliceCarousel from "react-alice-carousel";
 import HomeSectionCard from '../HomeSectionCard/HomeSectionCard';
 import "./style.css"
 import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
+import { findProductsByCategoryName } from '../../State/Products/Action';
 
 
-const HomeSectionCarousel = ({ data, sectionName }) => {
+const HomeSectionCarousel = ({ data, sectionName, categoryName }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const carouselRef = useRef(null);
+  const dispatch = useDispatch();
+  
+  // Get products from Redux store (reducer is named 'products' in store.js)
+  const { productsByCategory = {}, categoryLoading = {} } = useSelector((state) => state.products) || {};
+  
+  // Fetch products when categoryName is provided
+  useEffect(() => {
+    if (categoryName && !productsByCategory[categoryName]) {
+      dispatch(findProductsByCategoryName(categoryName));
+    }
+  }, [categoryName, dispatch, productsByCategory]);
+  
+  // Use API data if categoryName is provided, otherwise use static data
+  const productsData = categoryName 
+    ? (productsByCategory[categoryName] || []) 
+    : (data || []);
+  
+  const isLoading = categoryName ? categoryLoading[categoryName] : false;
   
   const responsive = {
     0: { items: 1 },
@@ -31,9 +51,23 @@ const HomeSectionCarousel = ({ data, sectionName }) => {
     setActiveIndex(item);
   };
 
-  const items = data
+  // Map API product structure to match what HomeSectionCard expects
+  const mapProductData = (product) => {
+    // If data comes from API (has discountPrice), map it
+    if (product.discountPrice !== undefined) {
+      return {
+        ...product,
+        discountedPrice: product.discountPrice, // API uses discountPrice, card uses discountedPrice
+      };
+    }
+    return product;
+  };
+
+  const items = productsData
     .slice(0, 10)
-    .map((item, index) => <HomeSectionCard key={item.id || index} product={item} />);
+    .map((item, index) => (
+      <HomeSectionCard key={item.id || index} product={mapProductData(item)} />
+    ));
   
   // Tính toán số items hiển thị dựa trên responsive
   const getItemsToShow = () => {
@@ -49,6 +83,11 @@ const HomeSectionCarousel = ({ data, sectionName }) => {
   const maxIndex = Math.max(0, items.length - Math.ceil(itemsToShow));
   const canSlideNext = activeIndex < maxIndex;
   const canSlidePrev = activeIndex > 0;
+
+  // Don't render if no products and not loading
+  if (!isLoading && items.length === 0) {
+    return null;
+  }
 
   return (
     <div className="mb-12">
@@ -82,18 +121,24 @@ const HomeSectionCarousel = ({ data, sectionName }) => {
         </div>
       </div>
       <div className="relative px-2">
-        <AliceCarousel
-          ref={carouselRef}
-          items={items}
-          disableButtonsControls
-          responsive={responsive}
-          disableDotsControls
-          onSlideChange={syncActiveIndex}
-          activeIndex={activeIndex}
-          mouseTracking
-          animationDuration={800}
-          controlsStrategy="responsive"
-        />
+        {isLoading ? (
+          <div className="flex justify-center items-center h-[15rem]">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+          </div>
+        ) : (
+          <AliceCarousel
+            ref={carouselRef}
+            items={items}
+            disableButtonsControls
+            responsive={responsive}
+            disableDotsControls
+            onSlideChange={syncActiveIndex}
+            activeIndex={activeIndex}
+            mouseTracking
+            animationDuration={800}
+            controlsStrategy="responsive"
+          />
+        )}
       </div>
     </div>
   );

@@ -16,7 +16,7 @@ import avt from "../../../assets/img/logo-cosmetic.jpg";
 import AuthModel from "../../Auth/AuthModel";
 import { useDispatch, useSelector } from "react-redux";
 import { getUser, logout } from "../../State/Auth/Action";
-import { API_BASE_URL } from "../../../config/apiConfig";
+import { API_BASE_URL, api } from "../../../config/apiConfig";
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
@@ -29,10 +29,96 @@ export default function Navigation() {
   const [openAuthModal, setOpenAuthModal] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const [avatarUrl, setAvatarUrl] = useState(null);
+  const [categoriesFromAPI, setCategoriesFromAPI] = useState([]);
   const openUserMenu = Boolean(anchorEl);
   const jwt = localStorage.getItem("jwt");
   const { auth } = useSelector((store) => store);
   const location = useLocation();
+
+  // Fetch categories from API
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const { data } = await api.get("/api/categories/navigation");
+        setCategoriesFromAPI(data || []);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        // Fallback to static data if API fails
+        setCategoriesFromAPI([]);
+      }
+    };
+    fetchCategories();
+  }, []);
+
+  // Transform API categories to navigation format
+  const buildNavigationFromAPI = () => {
+    if (categoriesFromAPI.length === 0) {
+      return navigation; // Fallback to static data
+    }
+
+    // Group categories by level
+    const level1Categories = categoriesFromAPI.filter(cat => cat.level === 1);
+    const level2Categories = categoriesFromAPI.filter(cat => cat.level === 2);
+    const level3Categories = categoriesFromAPI.filter(cat => cat.level === 3);
+
+    // Build navigation structure
+    const apiNavigation = {
+      categories: level1Categories.map(cat1 => {
+        // Get children (level 2) of this category
+        const children = level2Categories.filter(cat2 => 
+          cat2.parentCategory?.id === cat1.id
+        );
+
+        // Build sections from level 2 categories
+        const sections = children.map(cat2 => {
+          // Get grandchildren (level 3) of this level 2 category
+          const grandchildren = level3Categories.filter(cat3 =>
+            cat3.parentCategory?.id === cat2.id
+          );
+
+          return {
+            id: cat2.name.toLowerCase().replace(/\s+/g, '_'),
+            name: cat2.displayName || cat2.name,
+            items: grandchildren.map(cat3 => ({
+              name: cat3.displayName || cat3.name,
+              id: cat3.name.toLowerCase().replace(/\s+/g, '_'),
+              href: `/${cat1.name}/${cat2.name}/${cat3.name}`,
+            })),
+          };
+        });
+
+        return {
+          id: cat1.name.toLowerCase().replace(/\s+/g, '_'),
+          name: cat1.displayName || cat1.name,
+          featured: navigation.categories[0]?.featured || [], // Keep featured from static data
+          sections: sections.length > 0 ? sections : [
+            {
+              id: cat1.name.toLowerCase().replace(/\s+/g, '_'),
+              name: cat1.displayName || cat1.name,
+              items: children.map(cat2 => ({
+                name: cat2.displayName || cat2.name,
+                id: cat2.name.toLowerCase().replace(/\s+/g, '_'),
+                href: `/${cat1.name}/${cat2.name}`,
+              })),
+            },
+          ],
+        };
+      }),
+    };
+
+    // Merge with static navigation for pages and other data
+    return {
+      ...navigation,
+      categories: apiNavigation.categories.length > 0 
+        ? apiNavigation.categories 
+        : navigation.categories, // Fallback if no API data
+    };
+  };
+
+  // Use API data if available, otherwise use static data
+  const navigationData = categoriesFromAPI.length > 0 
+    ? buildNavigationFromAPI() 
+    : navigation;
 
 
   const handleUserClick = (event) => {
@@ -145,7 +231,7 @@ export default function Navigation() {
                 <Tab.Group as="div" className="mt-2">
                   <div className="border-b border-gray-200">
                     <Tab.List className="-mb-px flex space-x-8 px-4">
-                      {navigation?.categories?.map((category) => (
+                      {navigationData?.categories?.map((category) => (
                         <Tab
                           key={category.name}
                           className={({ selected }) =>
@@ -163,7 +249,7 @@ export default function Navigation() {
                     </Tab.List>
                   </div>
                   <Tab.Panels as={Fragment}>
-                    {navigation.categories.map((category) => (
+                    {navigationData.categories.map((category) => (
                       <Tab.Panel
                         key={category.name}
                         className="space-y-10 px-4 pb-8 pt-10"
@@ -227,7 +313,7 @@ export default function Navigation() {
                 </Tab.Group>
 
                 <div className="space-y-6 border-t border-gray-200 px-4 py-6">
-                  {navigation?.pages?.map((page) => (
+                  {navigationData?.pages?.map((page) => (
                     <div key={page.name} className="flow-root">
                       <a
                         href={page.href}
@@ -297,7 +383,7 @@ export default function Navigation() {
               {/* Flyout menus */}
               <Popover.Group className="hidden lg:ml-8 lg:block lg:self-stretch z-10">
                 <div className="flex h-full space-x-8">
-                  {navigation?.categories?.map((category) => (
+                  {navigationData?.categories?.map((category) => (
                     <Popover key={category.name} className="flex">
                       {({ open, close }) => (
                         <>
@@ -414,7 +500,7 @@ export default function Navigation() {
                     </Popover>
                   ))}
 
-                  {navigation?.pages?.map((page) => (
+                  {navigationData?.pages?.map((page) => (
                     <a
                       key={page.name}
                       href={page.href}

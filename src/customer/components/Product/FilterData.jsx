@@ -1,80 +1,68 @@
-export const singleFilters = [
+// Filters dùng checkbox (chọn nhiều)
+export const filters = [
   {
-    id: 1,
-    name: "Brand",
-    options: ["Universaloutfit", "Manyavar", "W", "Puma", "Nike"],
-  },
-  {
-    id: 2,
-    name: "Price",
+    id: "colors",
+    name: "Màu sắc",
     options: [
-      "Under 500000",
-      "500000-1000000",
-      "1000000-2000000",
-      "2000000-5000000",
-      "Above 5000000",
+      { value: "Đen", label: "Đen" },
+      { value: "Trắng", label: "Trắng" },
+      { value: "Đỏ", label: "Đỏ" },
+      { value: "Xanh dương", label: "Xanh dương" },
+      { value: "Xanh lá", label: "Xanh lá" },
+      { value: "Vàng", label: "Vàng" },
+      { value: "Hồng", label: "Hồng" },
+      { value: "Cam", label: "Cam" },
+      { value: "Tím", label: "Tím" },
+      { value: "Nâu", label: "Nâu" },
     ],
   },
   {
-    id: 3,
-    name: "Color",
-    options: ["Black", "White", "Red", "Blue", "Green", "Yellow", "Pink"],
-  },
-  { id: 4, name: "Size", options: ["XS", "S", "M", "L", "XL", "XXL"] },
-  {
-    id: 5,
-    name: "Discount",
+    id: "size",
+    name: "Kích cỡ",
     options: [
-      { value: "10", label: "10% And Above" },
-      { value: "20", label: "20% And Above" },
-      { value: "30", label: "30% And Above" },
-      { value: "40", label: "40% And Above" },
-      { value: "50", label: "50% And Above" },
-      { value: "60", label: "60% And Above" },
-      { value: "70", label: "70% And Above" },
-      { value: "80", label: "80% And Above" },
-      { value: "90", label: "90% And Above" },
-      { value: "100", label: "100% And Above" },
+      { value: "XS", label: "XS" },
+      { value: "S", label: "S" },
+      { value: "M", label: "M" },
+      { value: "L", label: "L" },
+      { value: "XL", label: "XL" },
+      { value: "XXL", label: "XXL" },
+      { value: "Free Size", label: "Free Size" },
     ],
   },
 ];
-export const filters = [
+
+// Single filters dùng radio (chọn một)
+export const singleFilters = [
   {
-    id: 1,
-    name: "Brand",
-    options: ["Universaloutfit", "Manyavar", "W", "Puma", "Nike"],
-  },
-  {
-    id: 2,
-    name: "Price",
+    id: "price",
+    name: "Mức giá",
     options: [
-      "Under 500000",
-      "500000-1000000",
-      "1000000-2000000",
-      "2000000-5000000",
-      "Above 5000000",
+      { value: "0-100000", label: "Dưới 100.000đ" },
+      { value: "100000-300000", label: "100.000đ - 300.000đ" },
+      { value: "300000-500000", label: "300.000đ - 500.000đ" },
+      { value: "500000-1000000", label: "500.000đ - 1.000.000đ" },
+      { value: "1000000-2000000", label: "1.000.000đ - 2.000.000đ" },
+      { value: "2000000-5000000", label: "2.000.000đ - 5.000.000đ" },
+      { value: "5000000-100000000", label: "Trên 5.000.000đ" },
     ],
   },
   {
-    id: 3,
-    name: "Color",
-    options: ["Black", "White", "Red", "Blue", "Green", "Yellow", "Pink"],
-  },
-  { id: 4, name: "Size", options: ["XS", "S", "M", "L", "XL", "XXL"] },
-  {
-    id: 5,
-    name: "Discount",
+    id: "discount",
+    name: "Khuyến mãi",
     options: [
-      { value: "10", label: "10% And Above" },
-      { value: "20", label: "20% And Above" },
-      { value: "30", label: "30% And Above" },
-      { value: "40", label: "40% And Above" },
-      { value: "50", label: "50% And Above" },
-      { value: "60", label: "60% And Above" },
-      { value: "70", label: "70% And Above" },
-      { value: "80", label: "80% And Above" },
-      { value: "90", label: "90% And Above" },
-      { value: "100", label: "100% And Above" },
+      { value: "10", label: "Giảm từ 10%" },
+      { value: "20", label: "Giảm từ 20%" },
+      { value: "30", label: "Giảm từ 30%" },
+      { value: "40", label: "Giảm từ 40%" },
+      { value: "50", label: "Giảm từ 50%" },
     ],
   },
+];
+
+// Sort options
+export const sortOptions = [
+  { name: "Giá: Thấp đến Cao", value: "price_low" },
+  { name: "Giá: Cao đến Thấp", value: "price_high" },
+  { name: "Mới nhất", value: "newest" },
+  { name: "Bán chạy", value: "best_seller" },
 ];
