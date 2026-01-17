@@ -80,12 +80,51 @@ const OrdersTable = () => {
      setAnchorEl(newAnchorElArray);
    };
 
+  // Hàm tạo mã GD tự động
+  const generateTransactionId = (orderId, orderDate) => {
+    if (!orderId) return "";
+    const date = orderDate ? new Date(orderDate) : new Date();
+    const dateStr = date.toISOString().slice(0, 10).replace(/-/g, "");
+    const timeStr = date.toTimeString().slice(0, 8).replace(/:/g, "");
+    return `ORDER-${dateStr}${timeStr}-${orderId.toString().padStart(6, '0')}`;
+  };
+
+  // Hàm format ngày tháng
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes} ${day}/${month}/${year}`;
+  };
+
+  // Hàm lấy phương thức thanh toán
+  const getPaymentMethod = (order) => {
+    if (order.paypalOrderId) return "PayPal";
+    if (order.paymentDetails?.paymentMethod) {
+      return order.paymentDetails.paymentMethod;
+    }
+    return "COD"; // Cash on Delivery
+  };
+
+  // Lọc chỉ lấy đơn hàng đã thanh toán
+  const getPaidOrders = () => {
+    const orders = adminOrder?.orders || [];
+    return orders.filter(order => {
+      const status = order.orderStatus?.toUpperCase();
+      return status === "PLACED" || status === "CONFIRMED" || 
+             status === "SHIPPED" || status === "DELIVERED";
+    });
+  };
+
   // Hàm export ra Excel
   const handleExportToExcel = () => {
-    // Lấy dữ liệu từ Redux store (đã được load từ API trong useEffect)
-    const orders = adminOrder?.orders || [];
+    const paidOrders = getPaidOrders();
     
-    if (!orders || orders.length === 0) {
+    if (!paidOrders || paidOrders.length === 0) {
       setSnackbar({
         open: true,
         message: "Không có dữ liệu để xuất!",
@@ -97,32 +136,17 @@ const OrdersTable = () => {
     // Chuyển đổi dữ liệu đơn hàng thành định dạng Excel
     const excelData = [];
     
-    adminOrder.orders.forEach((order) => {
-      // Nếu đơn hàng có nhiều sản phẩm, mỗi sản phẩm là một dòng
-      if (order.orderItems && order.orderItems.length > 0) {
-        order.orderItems.forEach((orderItem, itemIndex) => {
-          excelData.push({
-            "Mã đơn hàng": order.id || "",
-            "Tên người mua": `${order.user?.firstName || ""} ${order.user?.lastName || ""}`.trim() || "",
-            "Sản phẩm": orderItem?.product?.title || "",
-            "Giá đơn hàng (VND)": order.totalPrice || 0,
-            "Số lượng": orderItem?.product?.quantity || 0,
-            "Trạng thái": order.orderStatus || "",
-            "Ghi chú": itemIndex === 0 ? "" : "Sản phẩm thêm trong đơn hàng"
-          });
-        });
-      } else {
-        // Nếu không có orderItems, vẫn tạo một dòng với thông tin đơn hàng
-        excelData.push({
-          "Mã đơn hàng": order.id || "",
-          "Tên người mua": `${order.user?.firstName || ""} ${order.user?.lastName || ""}`.trim() || "",
-          "Sản phẩm": "",
-          "Giá đơn hàng (VND)": order.totalPrice || 0,
-          "Số lượng": 0,
-          "Trạng thái": order.orderStatus || "",
-          "Ghi chú": ""
-        });
-      }
+    paidOrders.forEach((order) => {
+      excelData.push({
+        "Mã GD": generateTransactionId(order.id, order.orderDate),
+        "Ngày GD": formatDate(order.orderDate),
+        "Mô tả": `Đơn hàng #${order.id} - ${order.orderItems?.map(item => item.product?.title).filter(Boolean).join(", ") || "Không có sản phẩm"}`,
+        "Nguồn thu": getPaymentMethod(order),
+        "Người đóng": `${order.user?.firstName || ""} ${order.user?.lastName || ""}`.trim() || "",
+        "Người tạo": "Tự động",
+        "Số tiền": order.totalPrice || 0,
+        "Trạng thái": order.orderStatus || "",
+      });
     });
 
     // Tạo worksheet từ dữ liệu
@@ -130,13 +154,14 @@ const OrdersTable = () => {
     
     // Thiết lập độ rộng cột
     const columnWidths = [
-      { wch: 15 }, // Mã đơn hàng
-      { wch: 25 }, // Tên người mua
-      { wch: 30 }, // Sản phẩm
-      { wch: 18 }, // Giá đơn hàng
-      { wch: 12 }, // Số lượng
+      { wch: 25 }, // Mã GD
+      { wch: 18 }, // Ngày GD
+      { wch: 40 }, // Mô tả
+      { wch: 15 }, // Nguồn thu
+      { wch: 25 }, // Người đóng
+      { wch: 15 }, // Người tạo
+      { wch: 15 }, // Số tiền
       { wch: 15 }, // Trạng thái
-      { wch: 30 }, // Ghi chú
     ];
     worksheet['!cols'] = columnWidths;
 
@@ -178,6 +203,7 @@ const OrdersTable = () => {
               color: "#1f2937",
             },
           }}
+          subheader="Quản lý các đơn hàng đã thanh toán"
           action={
             <Tooltip title="Xuất danh sách ra Excel">
               <IconButton
@@ -204,18 +230,15 @@ const OrdersTable = () => {
         <Table sx={{ minWidth: 650 }} aria-label="simple table">
           <TableHead sx={{ bgcolor: "#f3f4f6" }}>
             <TableRow>
-              <TableCell align="center" sx={{ fontWeight: 600 }}>
-                Ảnh
-              </TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Sản phẩm</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Tên người mua</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Giá</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Số lượng</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Mã GD</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Ngày GD</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Mô tả</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Nguồn thu</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Người đóng</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Người tạo</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Số tiền</TableCell>
               <TableCell align="center" sx={{ fontWeight: 600 }}>
                 Trạng thái
-              </TableCell>
-              <TableCell align="center" sx={{ fontWeight: 600 }}>
-                Cập nhật trạng thái
               </TableCell>
               <TableCell align="center" sx={{ fontWeight: 600 }}>
                 Thao tác
@@ -224,123 +247,119 @@ const OrdersTable = () => {
           </TableHead>
 
           <TableBody>
-            {adminOrder?.orders?.map((item, index) => (
+            {getPaidOrders().map((item, index) => (
               <TableRow
-                key={item.name}
+                key={item.id}
                 sx={{
                   "&:last-child td, &:last-child th": { border: 0 },
                   "&:hover": { bgcolor: "#f9fafb" },
                   transition: "0.2s ease",
                 }}
               >
-                <TableCell align="center" sx={{display:"flex",gap:"10px"}}>
-                  {item?.orderItems?.map((orderItem) => (
-                    <Avatar
-                      src={orderItem.imageUrl}
-                      alt={orderItem.title}
-                      sx={{
-                        width: 50,
-                        height: 50,
-                        borderRadius: 2,
-                        boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
-                      }}
-                    />
-                  ))}
-                </TableCell>
-
-                <TableCell align="left" scope="row">
-                  <span className="font-medium text-gray-800">
-                    {item?.orderItems?.map((orderItem) => (
-                      <p>{orderItem?.product?.title}</p>
-                    ))}
+                <TableCell>
+                  <span className="font-mono text-sm text-gray-700">
+                    {generateTransactionId(item.id, item.orderDate)}
                   </span>
                 </TableCell>
 
-                <TableCell align="left">
+                <TableCell>
                   <span className="text-gray-600">
-                    {item?.user?.firstName} {item?.user?.lastName}
+                    {formatDate(item.orderDate)}
                   </span>
                 </TableCell>
 
-                <TableCell align="left">
-                  <span className="text-green-600 font-semibold">
-                    {item?.totalPrice != null
-                      ? item.totalPrice.toLocaleString("vi-VN")
-                      : "0"}
+                <TableCell>
+                  <span className="text-gray-800">
+                    Đơn hàng #{item.id} - {item.orderItems?.map(orderItem => orderItem.product?.title).filter(Boolean).join(", ") || "Không có sản phẩm"}
                   </span>
                 </TableCell>
-                <TableCell align="center">
+
+                <TableCell>
                   <span className="text-gray-700">
-                    {item?.orderItems?.map((orderItem) => (
-                      <p>{orderItem?.product?.quantity}</p>
-                    ))}
+                    {getPaymentMethod(item)}
                   </span>
                 </TableCell>
-                <TableCell align="left">
+
+                <TableCell>
+                  <div>
+                    <span className="text-gray-800 font-medium">
+                      {item?.user?.firstName} {item?.user?.lastName}
+                    </span>
+                    {item?.user?.email && (
+                      <p className="text-xs text-gray-500">{item.user.email}</p>
+                    )}
+                  </div>
+                </TableCell>
+
+                <TableCell>
+                  <div>
+                    <span className="text-gray-700">Tự động</span>
+                    <p className="text-xs text-gray-500">{getPaymentMethod(item)}</p>
+                  </div>
+                </TableCell>
+
+                <TableCell>
+                  <span className="text-green-600 font-semibold">
+                    +{item?.totalPrice != null
+                      ? item.totalPrice.toLocaleString("vi-VN")
+                      : "0"} ₫
+                  </span>
+                </TableCell>
+
+                <TableCell align="center">
                   <span
-                    className={`text-white px-5 py-2 rounded-full ${
+                    className={`text-white px-3 py-1 rounded-full text-xs font-medium ${
                       item.orderStatus === "CONFIRMED"
                         ? "bg-[#369236]"
                         : item.orderStatus === "SHIPPED"
                         ? "bg-[#4141ff]"
                         : item.orderStatus === "PLACED"
                         ? "bg-[#02B290]"
+                        : item.orderStatus === "DELIVERED"
+                        ? "bg-[#10b981]"
                         : item.orderStatus === "PENDING"
                         ? "bg-gray-400"
                         : "bg-[#025720]"
                     }`}
                   >
-                    {item.orderStatus}
+                    {item.orderStatus === "DELIVERED" ? "Hoàn thành" : item.orderStatus}
                   </span>
                 </TableCell>
 
                 <TableCell align="center">
-                  <Button
-                    id="basic-button"
-                    aria-haspopup="true"
-                    onClick={(event) => handleClick(event, index)}
-                    aria-controls={`basic-menu-${item.id}`}
-                    aria-expanded={Boolean(anchorEl[index])}
-                  >
-                    Trạng thái
-                  </Button>
-                  <Menu
-                    id={`basic-menu-${item.id}`}
-                    anchorEl={anchorEl[index]}
-                    open={Boolean(anchorEl[index])}
-                    onClose={() => handleClose(index)}
-                    slotProps={{
-                      list: {
-                        "aria-labelledby": "basic-button",
-                      },
-                    }}
-                  >
-                    <MenuItem onClick={() => handleConfirmOrder(item.id)}>
-                      Đơn hàng đã xác nhận
-                    </MenuItem>
-                    <MenuItem onClick={() => handleShipOrder(item.id)}>
-                      Đơn hàng đang giao
-                    </MenuItem>
-                    <MenuItem onClick={() => handleDeliveredOrder(item.id)}>
-                      Đơn hàng đã giao
-                    </MenuItem>
-                  </Menu>
-                </TableCell>
-
-                <TableCell align="center">
-                  <Button
-                    variant="outlined"
-                    color="error"
-                    size="small"
-                    sx={{
-                      borderRadius: "12px",
-                      textTransform: "none",
-                      fontWeight: 500,
-                    }}
-                    onClick={() => handleDeleteOrder(item.id)}
-                  >
-                    Xóa
-                  </Button>
+                  <div className="flex gap-2 justify-center">
+                    <Button
+                      id={`basic-button-${item.id}`}
+                      aria-haspopup="true"
+                      onClick={(event) => handleClick(event, index)}
+                      aria-controls={`basic-menu-${item.id}`}
+                      aria-expanded={Boolean(anchorEl[index])}
+                      size="small"
+                      variant="outlined"
+                      sx={{
+                        textTransform: "none",
+                        fontSize: "0.75rem",
+                      }}
+                    >
+                      Cập nhật
+                    </Button>
+                    <Menu
+                      id={`basic-menu-${item.id}`}
+                      anchorEl={anchorEl[index]}
+                      open={Boolean(anchorEl[index])}
+                      onClose={() => handleClose(index)}
+                    >
+                      <MenuItem onClick={() => handleConfirmOrder(item.id)}>
+                        Đơn hàng đã xác nhận
+                      </MenuItem>
+                      <MenuItem onClick={() => handleShipOrder(item.id)}>
+                        Đơn hàng đang giao
+                      </MenuItem>
+                      <MenuItem onClick={() => handleDeliveredOrder(item.id)}>
+                        Đơn hàng đã giao
+                      </MenuItem>
+                    </Menu>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
