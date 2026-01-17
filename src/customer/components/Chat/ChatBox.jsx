@@ -19,6 +19,9 @@ const ChatBox = ({ isOpen, onClose, receiverId, receiverName, receiverAvatar }) 
   const [message, setMessage] = useState("");
   const [stompClient, setStompClient] = useState(null);
   const messagesEndRef = useRef(null);
+  const [contextMenu, setContextMenu] = useState(null);
+  const [selectedMessage, setSelectedMessage] = useState(null);
+  const [hoveredMessageId, setHoveredMessageId] = useState(null);
   const jwt = localStorage.getItem("jwt");
   const currentUser = auth.user;
   const messages = receiverId ? (chat.messages[receiverId] || []) : [];
@@ -73,6 +76,61 @@ const ChatBox = ({ isOpen, onClose, receiverId, receiverName, receiverAvatar }) 
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  useEffect(() => {
+    // Close context menu when clicking outside
+    const handleClickOutside = (event) => {
+      if (contextMenu && !event.target.closest('.context-menu') && !event.target.closest('button[title="Tùy chọn"]')) {
+        setContextMenu(null);
+        setSelectedMessage(null);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [contextMenu]);
+
+  const handleMessageRightClick = (e, msg) => {
+    e.preventDefault();
+    const senderId = msg.senderId || (msg.sender && msg.sender.id) || (msg.sender && typeof msg.sender === 'object' ? msg.sender.id : null);
+    const isSender = senderId === currentUser?.id;
+    
+    if (isSender) {
+      setSelectedMessage(msg);
+      setContextMenu({
+        x: e.clientX,
+        y: e.clientY,
+      });
+    }
+  };
+
+  const handleContextMenuAction = async (action, msg) => {
+    setContextMenu(null);
+    setSelectedMessage(null);
+    
+    switch (action) {
+      case 'delete':
+        // "Thu hồi" = Xóa tin nhắn
+        await handleDeleteMessage(msg.id);
+        break;
+      case 'forward':
+        // TODO: Implement forward functionality
+        alert('Tính năng chuyển tiếp đang được phát triển');
+        break;
+      case 'pin':
+        // TODO: Implement pin functionality
+        alert('Tính năng ghim đang được phát triển');
+        break;
+      case 'report':
+        // TODO: Implement report functionality
+        alert('Tính năng báo cáo đang được phát triển');
+        break;
+      default:
+        break;
+    }
+  };
+
   const handleSendMessage = async (e) => {
     e.preventDefault();
     
@@ -103,7 +161,7 @@ const ChatBox = ({ isOpen, onClose, receiverId, receiverName, receiverAvatar }) 
   };
 
   const handleDeleteMessage = async (messageId) => {
-    if (!window.confirm("Bạn có chắc chắn muốn xóa tin nhắn này?")) {
+    if (!window.confirm("Bạn có chắc chắn muốn thu hồi tin nhắn này?")) {
       return;
     }
 
@@ -111,7 +169,7 @@ const ChatBox = ({ isOpen, onClose, receiverId, receiverName, receiverAvatar }) 
       await dispatch(deleteMessage(jwt, messageId, receiverId));
     } catch (error) {
       console.error("Error deleting message:", error);
-      alert("Không thể xóa tin nhắn. Bạn chỉ có thể xóa tin nhắn của chính mình.");
+      alert("Không thể thu hồi tin nhắn. Bạn chỉ có thể thu hồi tin nhắn của chính mình.");
     }
   };
 
@@ -179,7 +237,7 @@ const ChatBox = ({ isOpen, onClose, receiverId, receiverName, receiverAvatar }) 
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 relative">
         {messages.length === 0 ? (
           <div className="text-center text-gray-500 mt-8">
             <p>Chưa có tin nhắn nào</p>
@@ -193,15 +251,46 @@ const ChatBox = ({ isOpen, onClose, receiverId, receiverName, receiverAvatar }) 
             return (
               <div
                 key={msg.id}
-                className={`flex ${isSender ? "justify-end" : "justify-start"} group`}
+                className={`flex ${isSender ? "justify-end" : "justify-start"} relative`}
+                onMouseEnter={() => isSender && setHoveredMessageId(msg.id)}
+                onMouseLeave={() => setHoveredMessageId(null)}
               >
                 <div
-                  className={`relative max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                  className={`message-bubble relative max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
                     isSender
                       ? "bg-blue-600 text-white"
                       : "bg-gray-200 text-gray-800"
                   }`}
                 >
+                  {isSender && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const messagesContainer = e.currentTarget.closest('.flex-1');
+                        if (messagesContainer) {
+                          const containerRect = messagesContainer.getBoundingClientRect();
+                          setSelectedMessage(msg);
+                          setContextMenu({
+                            x: rect.right - containerRect.left - 150,
+                            y: rect.top - containerRect.top,
+                          });
+                        }
+                      }}
+                      className={`absolute -top-1 -right-1 transition-opacity duration-200 bg-gray-800 hover:bg-gray-700 text-white rounded-full p-1.5 shadow-lg z-10 cursor-pointer ${
+                        hoveredMessageId === msg.id ? 'opacity-100' : 'opacity-0'
+                      }`}
+                      title="Tùy chọn"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
+                      </svg>
+                    </button>
+                  )}
                   <p className="text-sm">{msg.content}</p>
                   <div className="flex items-center justify-between mt-1">
                     <p
@@ -211,27 +300,6 @@ const ChatBox = ({ isOpen, onClose, receiverId, receiverName, receiverAvatar }) 
                     >
                       {formatTime(msg.timestamp)}
                     </p>
-                    {isSender && (
-                      <button
-                        onClick={() => handleDeleteMessage(msg.id)}
-                        className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity text-red-300 hover:text-red-100"
-                        title="Xóa tin nhắn"
-                      >
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                          />
-                        </svg>
-                      </button>
-                    )}
                   </div>
                 </div>
               </div>
@@ -240,6 +308,55 @@ const ChatBox = ({ isOpen, onClose, receiverId, receiverName, receiverAvatar }) 
         )}
         <div ref={messagesEndRef} />
       </div>
+
+      {/* Context Menu */}
+      {contextMenu && selectedMessage && (
+        <div
+          className="context-menu absolute bg-gray-800 text-white rounded-lg shadow-xl py-2 z-[60] min-w-[150px]"
+          style={{
+            left: `${contextMenu.x}px`,
+            top: `${contextMenu.y}px`,
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            onClick={() => handleContextMenuAction('delete', selectedMessage)}
+            className="w-full px-4 py-2 text-left hover:bg-gray-700 transition-colors flex items-center space-x-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+            </svg>
+            <span>Thu hồi</span>
+          </button>
+          <button
+            onClick={() => handleContextMenuAction('forward', selectedMessage)}
+            className="w-full px-4 py-2 text-left hover:bg-gray-700 transition-colors flex items-center space-x-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+            </svg>
+            <span>Chuyển tiếp</span>
+          </button>
+          <button
+            onClick={() => handleContextMenuAction('pin', selectedMessage)}
+            className="w-full px-4 py-2 text-left hover:bg-gray-700 transition-colors flex items-center space-x-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+            </svg>
+            <span>Ghim</span>
+          </button>
+          <button
+            onClick={() => handleContextMenuAction('report', selectedMessage)}
+            className="w-full px-4 py-2 text-left hover:bg-gray-700 transition-colors flex items-center space-x-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <span>Báo cáo</span>
+          </button>
+        </div>
+      )}
 
       {/* Input */}
       <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-200">
