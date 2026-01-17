@@ -19,8 +19,12 @@ import {
   Tooltip,
   Snackbar,
   Alert,
+  InputBase,
+  Box,
 } from "@mui/material";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
+import SearchIcon from "@mui/icons-material/Search";
+import FilterListIcon from "@mui/icons-material/FilterList";
 import * as XLSX from 'xlsx';
 const OrdersTable = () => {
   const dispatch = useDispatch();
@@ -86,7 +90,7 @@ const OrdersTable = () => {
     const date = orderDate ? new Date(orderDate) : new Date();
     const dateStr = date.toISOString().slice(0, 10).replace(/-/g, "");
     const timeStr = date.toTimeString().slice(0, 8).replace(/:/g, "");
-    return `ORDER-${dateStr}${timeStr}-${orderId.toString().padStart(6, '0')}`;
+    return `${dateStr}${timeStr}-${orderId.toString().padStart(6, '0')}`;
   };
 
   // Hàm format ngày tháng
@@ -191,56 +195,155 @@ const OrdersTable = () => {
     }
   };
 
+  const paidOrders = getPaidOrders();
+  
+  // Tính toán summary
+  const totalRevenue = paidOrders.reduce((sum, order) => sum + (order.totalPrice || 0), 0);
+  const totalOrders = paidOrders.length;
+  const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
   return (
-    <div className="p-5 bg-gray-50 min-h-screen">
-      <Card className="mt-2 shadow-md rounded-2xl" sx={{ bgcolor: "white" }}>
+    <div className="p-6 bg-gray-50 min-h-full">
+      {/* Title Section */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Thống kê đơn hàng</h1>
+        <p className="text-gray-600">Quản lý các đơn hàng đã thanh toán</p>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        {/* Số dư ví / Tổng đơn hàng */}
+        <Card className="shadow-md rounded-xl border border-gray-100">
+          <Box className="p-5 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-20 h-20 bg-blue-100 rounded-full -mr-10 -mt-10 opacity-50"></div>
+            <div className="relative">
+              <p className="text-sm text-gray-600 mb-1">Tổng đơn hàng</p>
+              <p className="text-2xl font-bold text-gray-800">{totalOrders}</p>
+            </div>
+          </Box>
+        </Card>
+
+        {/* Tổng thu */}
+        <Card className="shadow-md rounded-xl border border-gray-100">
+          <Box className="p-5 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-20 h-20 bg-green-100 rounded-full -mr-10 -mt-10 opacity-50"></div>
+            <div className="relative">
+              <p className="text-sm text-gray-600 mb-1">Tổng thu</p>
+              <p className="text-2xl font-bold text-green-600">
+                {totalRevenue.toLocaleString("vi-VN")} ₫
+              </p>
+            </div>
+          </Box>
+        </Card>
+
+        {/* Tổng chi / Giá trị trung bình */}
+        <Card className="shadow-md rounded-xl border border-gray-100">
+          <Box className="p-5 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-20 h-20 bg-red-100 rounded-full -mr-10 -mt-10 opacity-50"></div>
+            <div className="relative">
+              <p className="text-sm text-gray-600 mb-1">Giá trị trung bình</p>
+              <p className="text-2xl font-bold text-gray-800">
+                {averageOrderValue.toLocaleString("vi-VN")} ₫
+              </p>
+            </div>
+          </Box>
+        </Card>
+      </div>
+
+      {/* Search and Filter Section */}
+      <Card className="shadow-md rounded-xl mb-6" sx={{ bgcolor: "white" }}>
+        <Box className="p-4">
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div className="flex-1 w-full md:w-auto">
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <SearchIcon className="h-5 w-5 text-gray-400" />
+                </div>
+                <InputBase
+                  placeholder="Tìm theo mã, mô tả, người đóng..."
+                  className="w-full pl-10 pr-4 py-2 bg-gray-100 rounded-lg border border-gray-200"
+                  sx={{
+                    "& .MuiInputBase-input": {
+                      padding: "8px 12px",
+                    },
+                  }}
+                />
+              </div>
+            </div>
+            <div className="flex gap-3 items-center">
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<FilterListIcon />}
+                sx={{ textTransform: "none" }}
+              >
+                Hiện bộ lọc nâng cao
+              </Button>
+              <Tooltip title="Xuất danh sách ra Excel">
+                <IconButton
+                  onClick={handleExportToExcel}
+                  sx={{
+                    bgcolor: "#10b981",
+                    color: "white",
+                    "&:hover": {
+                      bgcolor: "#059669",
+                    },
+                  }}
+                >
+                  <FileDownloadIcon />
+                </IconButton>
+              </Tooltip>
+            </div>
+          </div>
+        </Box>
+      </Card>
+
+      {/* Table Card */}
+      <Card className="shadow-md rounded-xl" sx={{ bgcolor: "white" }}>
         <CardHeader
-          title="Thống kê đơn hàng"
+          title="Giao dịch thu"
           titleTypographyProps={{
             sx: {
-              fontSize: "1.4rem",
+              fontSize: "1.2rem",
               fontWeight: 600,
               color: "#1f2937",
             },
           }}
-          subheader="Quản lý các đơn hàng đã thanh toán"
+          subheader="Quản lý các khoản thu học phí, tài trợ, quyên góp, doanh thu kinh doanh"
           action={
-            <Tooltip title="Xuất danh sách ra Excel">
-              <IconButton
-                onClick={handleExportToExcel}
-                sx={{
-                  bgcolor: "#10b981",
-                  color: "white",
-                  "&:hover": {
-                    bgcolor: "#059669",
-                  },
-                }}
-              >
-                <FileDownloadIcon />
-              </IconButton>
-            </Tooltip>
+            <Button
+              variant="contained"
+              sx={{
+                bgcolor: "#1976d2",
+                textTransform: "none",
+                "&:hover": {
+                  bgcolor: "#1565c0",
+                },
+              }}
+            >
+              + Thêm khoản thu
+            </Button>
           }
         />
-      </Card>
-
-      <TableContainer
-        component={Paper}
-        className="mt-4 shadow-sm rounded-2xl overflow-hidden"
-      >
+        <TableContainer
+          component={Paper}
+          className="overflow-hidden"
+          sx={{ maxHeight: "calc(100vh - 500px)" }}
+        >
         <Table sx={{ minWidth: 650 }} aria-label="simple table">
-          <TableHead sx={{ bgcolor: "#f3f4f6" }}>
+          <TableHead sx={{ bgcolor: "#f8fafc" }}>
             <TableRow>
-              <TableCell sx={{ fontWeight: 600 }}>Mã GD</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Ngày GD</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Mô tả</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Nguồn thu</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Người đóng</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Người tạo</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Số tiền</TableCell>
-              <TableCell align="center" sx={{ fontWeight: 600 }}>
+              <TableCell sx={{ fontWeight: 600, color: "#475569" }}>Mã GD</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: "#475569" }}>Ngày GD</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: "#475569" }}>Mô tả</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: "#475569" }}>Nguồn thu</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: "#475569" }}>Người đóng</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: "#475569" }}>Người tạo</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: "#475569" }}>Số tiền</TableCell>
+              <TableCell align="center" sx={{ fontWeight: 600, color: "#475569" }}>
                 Trạng thái
               </TableCell>
-              <TableCell align="center" sx={{ fontWeight: 600 }}>
+              <TableCell align="center" sx={{ fontWeight: 600, color: "#475569" }}>
                 Thao tác
               </TableCell>
             </TableRow>
@@ -308,7 +411,7 @@ const OrdersTable = () => {
 
                 <TableCell align="center">
                   <span
-                    className={`text-white px-3 py-1 rounded-full text-xs font-medium ${
+                    className={`inline-flex items-center gap-1 text-white px-3 py-1 rounded-full text-xs font-medium ${
                       item.orderStatus === "CONFIRMED"
                         ? "bg-[#369236]"
                         : item.orderStatus === "SHIPPED"
@@ -322,50 +425,36 @@ const OrdersTable = () => {
                         : "bg-[#025720]"
                     }`}
                   >
+                    {item.orderStatus === "DELIVERED" && (
+                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
                     {item.orderStatus === "DELIVERED" ? "Hoàn thành" : item.orderStatus}
                   </span>
                 </TableCell>
 
                 <TableCell align="center">
-                  <div className="flex gap-2 justify-center">
-                    <Button
-                      id={`basic-button-${item.id}`}
-                      aria-haspopup="true"
-                      onClick={(event) => handleClick(event, index)}
-                      aria-controls={`basic-menu-${item.id}`}
-                      aria-expanded={Boolean(anchorEl[index])}
-                      size="small"
-                      variant="outlined"
-                      sx={{
-                        textTransform: "none",
-                        fontSize: "0.75rem",
-                      }}
-                    >
-                      Cập nhật
-                    </Button>
-                    <Menu
-                      id={`basic-menu-${item.id}`}
-                      anchorEl={anchorEl[index]}
-                      open={Boolean(anchorEl[index])}
-                      onClose={() => handleClose(index)}
-                    >
-                      <MenuItem onClick={() => handleConfirmOrder(item.id)}>
-                        Đơn hàng đã xác nhận
-                      </MenuItem>
-                      <MenuItem onClick={() => handleShipOrder(item.id)}>
-                        Đơn hàng đang giao
-                      </MenuItem>
-                      <MenuItem onClick={() => handleDeliveredOrder(item.id)}>
-                        Đơn hàng đã giao
-                      </MenuItem>
-                    </Menu>
-                  </div>
+                  <IconButton
+                    size="small"
+                    sx={{
+                      color: "#64748b",
+                      "&:hover": {
+                        bgcolor: "#f1f5f9",
+                      },
+                    }}
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </IconButton>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </TableContainer>
+      </Card>
 
       {/* Snackbar thông báo */}
       <Snackbar

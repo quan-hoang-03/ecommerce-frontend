@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import axios from "axios";
 import { API_BASE_URL } from "../../../config/apiConfig";
 import { CheckCircle } from "lucide-react";
+import { getCart } from "../../State/Cart/Action";
 
 const PaymentSuccess = () => {
   const { orderId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
@@ -20,6 +23,8 @@ const PaymentSuccess = () => {
       // Nếu là COD, không cần capture
       if (method === "cod") {
         setMessage("Đơn hàng của bạn đã được xác nhận!");
+        // Xóa giỏ hàng sau khi thanh toán thành công
+        await clearCartAfterPayment();
         setLoading(false);
         return;
       }
@@ -33,18 +38,38 @@ const PaymentSuccess = () => {
             { headers: { Authorization: `Bearer ${token}` } }
           );
           setMessage("Thanh toán PayPal thành công!");
+          // Xóa giỏ hàng sau khi thanh toán thành công
+          await clearCartAfterPayment();
         } catch (error) {
           console.error("Lỗi capture payment:", error);
           setMessage("Có lỗi xảy ra khi xác nhận thanh toán. Vui lòng liên hệ hỗ trợ.");
         }
       } else {
         setMessage("Đơn hàng của bạn đã được đặt thành công!");
+        // Xóa giỏ hàng sau khi thanh toán thành công
+        await clearCartAfterPayment();
       }
       setLoading(false);
     };
 
+    const clearCartAfterPayment = async () => {
+      try {
+        const token = localStorage.getItem("jwt");
+        await axios.post(
+          `${API_BASE_URL}/api/cart_items/clear`,
+          {},
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        // Refresh cart để cập nhật UI
+        dispatch(getCart());
+      } catch (error) {
+        console.error("Lỗi khi xóa giỏ hàng:", error);
+        // Không hiển thị lỗi cho user vì đơn hàng đã thành công
+      }
+    };
+
     capturePayment();
-  }, [orderId, location.search]);
+  }, [orderId, location.search, dispatch]);
 
   if (loading) {
     return (

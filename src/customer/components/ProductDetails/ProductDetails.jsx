@@ -1,6 +1,7 @@
 import { StarIcon } from "@heroicons/react/20/solid";
 import { Box, Button, Grid, LinearProgress, Rating } from "@mui/material";
 import ProductReviewCard from "./ProductReviewCard";
+import ReviewForm from "./ReviewForm";
 import React, { useEffect, useState } from "react";
 import HomeSectionCard from "../HomeSectionCard/HomeSectionCard";
 import { useNavigate, useParams } from "react-router-dom";
@@ -10,6 +11,7 @@ import { addItemToCart } from "../../State/Cart/Action";
 import { API_BASE_URL } from "../../../config/apiConfig";
 import { useNotification } from "../../hooks/useNotification";
 import NotificationContainer from "../Notification/NotificationContainer";
+import axios from "axios";
 
 const StarRating = ({ value, size = "medium", readOnly = false }) => {
   const stars = [];
@@ -50,14 +52,10 @@ function classNames(...classes) {
 
 export default function ProductDetails() {
   const [selectedSize, setSelectedSize] = useState(null);
+  const [reviews, setReviews] = useState([]);
+  const [ratings, setRatings] = useState([]);
+  const [loadingReviews, setLoadingReviews] = useState(false);
   const { notifications, showWarning, removeNotification } = useNotification();
-  const ratingData = [
-    { label: "Excellent", value: 40, color: "#22c55e" },
-    { label: "Very Good", value: 30, color: "#16a34a" },
-    { label: "Good", value: 30, color: "#eab308" },
-    { label: "Average", value: 20, color: "#f59e0b" },
-    { label: "Poor", value: 10, color: "#ef4444" },
-  ];
   const navigate = useNavigate();
   const handAddToCart = () => {
     if (!selectedSize) {
@@ -88,7 +86,94 @@ export default function ProductDetails() {
   useEffect(() => {
     const data = { productId: params.productId };
     dispatch(findProductById(data));
+    fetchReviewsAndRatings();
   }, [params.productId]);
+
+  const fetchReviewsAndRatings = async () => {
+    setLoadingReviews(true);
+    try {
+      const token = localStorage.getItem("jwt");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+      const [reviewsRes, ratingsRes] = await Promise.all([
+        axios.get(`${API_BASE_URL}/api/review/product/${params.productId}`, { headers }),
+        axios.get(`${API_BASE_URL}/api/rating/product/${params.productId}`, { headers }),
+      ]);
+
+      setReviews(reviewsRes.data || []);
+      setRatings(ratingsRes.data || []);
+    } catch (error) {
+      console.error("Lỗi khi tải reviews và ratings:", error);
+      setReviews([]);
+      setRatings([]);
+    } finally {
+      setLoadingReviews(false);
+    }
+  };
+
+  // Tính toán rating trung bình
+  const averageRating = ratings.length > 0
+    ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length
+    : 0;
+
+  // Tính toán phân bố rating
+  const getRatingDistribution = () => {
+    const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    ratings.forEach((r) => {
+      const rounded = Math.round(r.rating);
+      if (rounded >= 1 && rounded <= 5) {
+        distribution[rounded]++;
+      }
+    });
+
+    const total = ratings.length || 1;
+    return [
+      {
+        label: "Xuất sắc",
+        value: Math.round((distribution[5] / total) * 100),
+        color: "#22c55e",
+        count: distribution[5],
+      },
+      {
+        label: "Rất tốt",
+        value: Math.round((distribution[4] / total) * 100),
+        color: "#16a34a",
+        count: distribution[4],
+      },
+      {
+        label: "Tốt",
+        value: Math.round((distribution[3] / total) * 100),
+        color: "#eab308",
+        count: distribution[3],
+      },
+      {
+        label: "Trung bình",
+        value: Math.round((distribution[2] / total) * 100),
+        color: "#f59e0b",
+        count: distribution[2],
+      },
+      {
+        label: "Kém",
+        value: Math.round((distribution[1] / total) * 100),
+        color: "#ef4444",
+        count: distribution[1],
+      },
+    ];
+  };
+
+  const ratingData = getRatingDistribution();
+  
+  // Kết hợp reviews với ratings (match theo user)
+  const reviewsWithRatings = reviews.map((review) => {
+    const userRating = ratings.find((r) => r.user?.id === review.user?.id);
+    return { ...review, rating: userRating?.rating || 0 };
+  });
+
+  // Tính recommended percentage (rating >= 4)
+  const recommendedCount = ratings.filter((r) => r.rating >= 4).length;
+  const recommendedPercentage = ratings.length > 0
+    ? Math.round((recommendedCount / ratings.length) * 100)
+    : 0;
 
   return (
     <div className="bg-white lg:px-20">
@@ -140,13 +225,14 @@ export default function ProductDetails() {
                   <img
                     alt={item.title}
                     src={
-                      item.imageUrl?.startsWith('http') 
-                        ? item.imageUrl 
+                      item.imageUrl?.startsWith("http")
+                        ? item.imageUrl
                         : `${API_BASE_URL}${item.imageUrl}`
                     }
                     className="h-full w-full object-cover object-center"
                     onError={(e) => {
-                      e.target.src = 'https://via.placeholder.com/500x600?text=No+Image';
+                      e.target.src =
+                        "https://via.placeholder.com/500x600?text=No+Image";
                     }}
                   />
                 </div>
@@ -185,20 +271,22 @@ export default function ProductDetails() {
                         {item.sizes?.map((size) => {
                           // Size model has 'name' and 'quantity', not 'inStock'
                           // Check if quantity > 0 to determine if size is available
-                          const isInStock = (size.quantity !== undefined && size.quantity > 0) || 
-                                           (size.inStock !== undefined ? size.inStock : true);
-                          const sizeName = size.name || '';
-                          
+                          const isInStock =
+                            (size.quantity !== undefined &&
+                              size.quantity > 0) ||
+                            (size.inStock !== undefined ? size.inStock : true);
+                          const sizeName = size.name || "";
+
                           return (
                             <label
                               key={size.id || sizeName}
                               aria-label={sizeName}
                               className={`group relative flex items-center justify-center rounded-md border p-3 transition-all ${
                                 selectedSize === sizeName
-                                  ? 'border-indigo-600 bg-indigo-600'
+                                  ? "border-indigo-600 bg-indigo-600"
                                   : isInStock
-                                  ? 'border-gray-300 bg-white hover:border-indigo-400 cursor-pointer'
-                                  : 'border-gray-400 bg-gray-200 opacity-50 cursor-not-allowed'
+                                    ? "border-gray-300 bg-white hover:border-indigo-400 cursor-pointer"
+                                    : "border-gray-400 bg-gray-200 opacity-50 cursor-not-allowed"
                               }`}
                               onClick={(e) => {
                                 e.preventDefault();
@@ -221,11 +309,13 @@ export default function ProductDetails() {
                                 }}
                                 className="absolute inset-0 appearance-none focus:outline focus:outline-0 disabled:cursor-not-allowed cursor-pointer rounded-md"
                               />
-                              <span className={`text-sm font-medium uppercase ${
-                                selectedSize === sizeName
-                                  ? 'text-white'
-                                  : 'text-gray-900'
-                              }`}>
+                              <span
+                                className={`text-sm font-medium uppercase ${
+                                  selectedSize === sizeName
+                                    ? "text-white"
+                                    : "text-gray-900"
+                                }`}
+                              >
                                 {sizeName}
                               </span>
                             </label>
@@ -276,80 +366,123 @@ export default function ProductDetails() {
         {/* rating and reviews */}
         <section className="mx-auto p-6">
           <h1 className="text-2xl font-semibold text-gray-900 mb-6">
-            Recent Review & Rating
+            Đánh giá & Nhận xét
           </h1>
 
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
             <div className="p-8">
-              <div className="flex flex-col lg:flex-row gap-8">
+              {/* Review Form */}
+              <ReviewForm
+                productId={params.productId}
+                onReviewSubmitted={fetchReviewsAndRatings}
+              />
+
+              <div className="flex flex-col lg:flex-row gap-8 mt-8">
                 {/* Reviews Section */}
                 <div className="flex-1">
                   <h2 className="text-xl font-semibold text-gray-900 mb-6">
-                    Customer Reviews
+                    Đánh giá khách hàng
                   </h2>
-                  <div className="space-y-6">
-                    {[1, 2, 3, 4].map((item) => (
-                      <ProductReviewCard key={item} review={item} />
-                    ))}
-                  </div>
+                  {loadingReviews ? (
+                    <div className="text-center py-8">
+                      <p className="text-gray-500">Đang tải đánh giá...</p>
+                    </div>
+                  ) : reviewsWithRatings.length > 0 ? (
+                    <div className="space-y-6">
+                      {reviewsWithRatings.map((review) => (
+                        <ProductReviewCard
+                          key={review.id}
+                          review={review}
+                          rating={ratings.find(
+                            (r) => r.user?.id === review.user?.id,
+                          )}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-gray-500">
+                        Chưa có đánh giá nào. Hãy là người đầu tiên đánh giá!
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Ratings Section */}
                 <div className="w-full lg:w-96">
                   <div className="bg-gray-50 p-6 rounded-lg h-fit">
                     <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                      Product Ratings
+                      Thống kê đánh giá
                     </h2>
 
                     <div className="flex items-center space-x-4 mb-8">
-                      <StarRating value={4.6} size="large" readOnly />
+                      <StarRating value={averageRating} size="large" readOnly />
                       <div>
-                        <p className="text-2xl font-bold text-gray-900">4.6</p>
-                        <p className="text-sm text-gray-500">10,000 Ratings</p>
+                        <p className="text-2xl font-bold text-gray-900">
+                          {averageRating.toFixed(1)}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          {ratings.length} Đánh giá
+                        </p>
                       </div>
                     </div>
 
-                    <div className="space-y-4">
-                      {ratingData.map((rating, index) => (
-                        <div key={index} className="flex items-center gap-4">
-                          <div className="w-20 text-sm font-medium text-gray-700 text-left">
-                            {rating.label}
-                          </div>
-                          <div className="flex-1">
-                            <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                              <div
-                                className="h-full rounded-full transition-all duration-500 ease-out hover:opacity-80"
-                                style={{
-                                  width: `${rating.value}%`,
-                                  backgroundColor: rating.color,
-                                }}
-                              />
+                    {ratings.length > 0 ? (
+                      <>
+                        <div className="space-y-4">
+                          {ratingData.map((rating, index) => (
+                            <div
+                              key={index}
+                              className="flex items-center gap-4"
+                            >
+                              <div className="w-20 text-sm font-medium text-gray-700 text-left">
+                                {rating.label}
+                              </div>
+                              <div className="flex-1">
+                                <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                                  <div
+                                    className="h-full rounded-full transition-all duration-500 ease-out hover:opacity-80"
+                                    style={{
+                                      width: `${rating.value}%`,
+                                      backgroundColor: rating.color,
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                              <div className="w-12 text-sm text-gray-500 text-right font-medium">
+                                {rating.value}%
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Additional stats */}
+                        <div className="mt-8 pt-6 border-t border-gray-200">
+                          <div className="grid grid-cols-2 gap-4 text-center">
+                            <div>
+                              <p className="text-2xl font-bold text-green-600">
+                                {recommendedPercentage}%
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                Khuyên dùng
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-2xl font-bold text-blue-600">
+                                {reviews.length}
+                              </p>
+                              <p className="text-xs text-gray-500">Nhận xét</p>
                             </div>
                           </div>
-                          <div className="w-12 text-sm text-gray-500 text-right font-medium">
-                            {rating.value}%
-                          </div>
                         </div>
-                      ))}
-                    </div>
-
-                    {/* Additional stats */}
-                    <div className="mt-8 pt-6 border-t border-gray-200">
-                      <div className="grid grid-cols-2 gap-4 text-center">
-                        <div>
-                          <p className="text-2xl font-bold text-green-600">
-                            85%
-                          </p>
-                          <p className="text-xs text-gray-500">Recommended</p>
-                        </div>
-                        <div>
-                          <p className="text-2xl font-bold text-blue-600">
-                            4.2k
-                          </p>
-                          <p className="text-xs text-gray-500">Reviews</p>
-                        </div>
+                      </>
+                    ) : (
+                      <div className="text-center py-8">
+                        <p className="text-gray-500 text-sm">
+                          Chưa có đánh giá
+                        </p>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -359,7 +492,7 @@ export default function ProductDetails() {
 
         {/* similer products */}
         <section className="pt-10">
-          <h1 className="py-5 text-xl font-bold">Similer products</h1>
+          <h1 className="py-5 text-xl font-bold">Sản phẩm tương tự</h1>
           <div className="flex flex-wrap space-y-5">
             {products?.products?.content?.map((item) => (
               <HomeSectionCard key={item.id} product={item} />
@@ -368,9 +501,9 @@ export default function ProductDetails() {
         </section>
       </div>
 
-      <NotificationContainer 
-        notifications={notifications} 
-        onRemove={removeNotification} 
+      <NotificationContainer
+        notifications={notifications}
+        onRemove={removeNotification}
       />
     </div>
   );
