@@ -10,6 +10,7 @@ import Checkout from '../customer/components/Checkout/Checkout';
 import OrderDetails from '../customer/components/Order/OrderDetails';
 import OrdersPage from '../customer/components/Order/Order';
 import UserProfile from '../customer/components/UserProfile/UserProfile';
+import CustomerChat from '../customer/components/Chat/CustomerChat';
 
 const CustomerRoutes = () => {
   return (
@@ -34,6 +35,7 @@ const CustomerRoutes = () => {
       <div>
         <Footer />
       </div>
+      <CustomerChat />
     </div>
   );
 }

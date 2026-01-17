@@ -31,6 +31,7 @@ import CustomersTable from "./components/CustomersTable";
 import InventoryTable from "./components/InventoryTable";
 import AdminDashboard from "./components/Dashboard";
 import CategoryTable from "./components/CategoryTable";
+import AdminChat from "../customer/components/Chat/AdminChat";
 
 // Sidebar menu
 const menu = [
@@ -138,6 +139,7 @@ const Admin = () => {
           </Routes>
         </div>
       </div>
+      <AdminChat />
     </div>
   );
 };

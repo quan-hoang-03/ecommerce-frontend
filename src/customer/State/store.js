@@ -7,6 +7,7 @@ import { cartReduce } from "./Cart/Reducer";
 import { orderReducer } from "./Order/Reducer";
 import { adminOrderReducer } from "./Admin/Order/Reducer";
 import { adminInventoryReducer } from "./Admin/Inventory/Reducer";
+import chatReducer from "./Chat/Reducer";
 
 //Mỗi reducer sẽ phụ trách một phần riêng của state
 const rootReducer = combineReducers({
@@ -21,6 +22,8 @@ const rootReducer = combineReducers({
   
   adminOrder: adminOrderReducer,
   adminInventory: adminInventoryReducer,
+  //Chat: quản lý chat giữa customer và admin
+  chat: chatReducer,
 });
 
 const store = legacy_createStore(rootReducer, applyMiddleware(thunk));
