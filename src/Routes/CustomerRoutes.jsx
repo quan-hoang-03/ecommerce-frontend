@@ -11,6 +11,8 @@ import OrderDetails from '../customer/components/Order/OrderDetails';
 import OrdersPage from '../customer/components/Order/Order';
 import UserProfile from '../customer/components/UserProfile/UserProfile';
 import CustomerChat from '../customer/components/Chat/CustomerChat';
+import PaymentSuccess from '../customer/components/Payment/PaymentSuccess';
+import PaymentCancel from '../customer/components/Payment/PaymentCancel';
 
 const CustomerRoutes = () => {
   return (
@@ -28,6 +30,8 @@ const CustomerRoutes = () => {
         <Route path="/:lavelOne/:lavelTwo/:lavelThree" element={<Product />}></Route>
         <Route path="/product/:productId" element={<ProductDetails />}></Route>
         <Route path="/checkout" element={<Checkout />} ></Route>
+        <Route path="/payment/success/:orderId" element={<PaymentSuccess />} ></Route>
+        <Route path="/payment/cancel/:orderId" element={<PaymentCancel />} ></Route>
         <Route path="/account/profile" element={<UserProfile />} ></Route>
         <Route path="/account/order" element={<OrdersPage />} ></Route>
         <Route path="/account/order/:orderId" element={<OrderDetails />} ></Route>

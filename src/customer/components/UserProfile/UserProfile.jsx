@@ -7,6 +7,8 @@ import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import { getUser } from "../../State/Auth/Action";
 import axios from "axios";
 import { API_BASE_URL } from "../../../config/apiConfig";
+import { useNotification } from "../../hooks/useNotification";
+import NotificationContainer from "../Notification/NotificationContainer";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 const UserProfile = () => {
@@ -17,6 +19,7 @@ const UserProfile = () => {
   const fileInputRef = useRef(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const { notifications, showSuccess, showError, showWarning, removeNotification } = useNotification();
 
   useEffect(() => {
     if (!jwt) {
@@ -54,13 +57,13 @@ const UserProfile = () => {
 
     // Validate file type
     if (!file.type.startsWith("image/")) {
-      alert("Vui lòng chọn file ảnh!");
+      showWarning("Vui lòng chọn file ảnh!");
       return;
     }
 
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      alert("Kích thước ảnh không được vượt quá 5MB!");
+      showWarning("Kích thước ảnh không được vượt quá 5MB!");
       return;
     }
 
@@ -110,14 +113,14 @@ const UserProfile = () => {
           dispatch(getUser(jwt));
         }, 100);
         
-        alert("Đã cập nhật ảnh đại diện thành công!");
+        showSuccess("Đã cập nhật ảnh đại diện thành công!");
       } else {
         throw new Error("Không nhận được avatarUrl từ server");
       }
     } catch (error) {
       console.error("Lỗi khi upload ảnh:", error);
       const errorMessage = error.response?.data?.message || error.message || "Có lỗi xảy ra khi upload ảnh";
-      alert(`Lỗi: ${errorMessage}`);
+      showError(`Lỗi: ${errorMessage}`);
     } finally {
       setUploading(false);
     }
@@ -280,6 +283,11 @@ const UserProfile = () => {
           </div>
         </div>
       </div>
+
+      <NotificationContainer 
+        notifications={notifications} 
+        onRemove={removeNotification} 
+      />
     </div>
   );
 };

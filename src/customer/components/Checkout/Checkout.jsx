@@ -3,6 +3,7 @@ import { Check } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import DeliveryAddressForm from "./DeliveryAddressForm";
 import OrderSummary from "./OrderSummary";
+import Payment from "./Payment";
 
 const Checkout = () => {
   const location = useLocation();
@@ -18,11 +19,24 @@ const Checkout = () => {
 
   const steps = ["Login", "Delivery Address", "Order Summary", "Payment"];
 
+  // Sync step state khi URL thay đổi (từ bên ngoài như Action.js)
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
-    searchParams.set("step", step);
-    navigate({ search: searchParams.toString() }, { replace: true });
-  }, [step, location.search, navigate]);
+    const urlStep = parseInt(searchParams.get("step")) || 1;
+    if (urlStep !== step) {
+      setStep(urlStep);
+    }
+  }, [location.search]);
+
+  // Cập nhật URL khi step thay đổi từ trong component
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const urlStep = parseInt(searchParams.get("step")) || 1;
+    if (urlStep !== step) {
+      searchParams.set("step", step);
+      navigate({ search: searchParams.toString() }, { replace: true });
+    }
+  }, [step]);
 
   return (
     <div className="min-h-screen bg-gray-50 py-10">
@@ -84,6 +98,8 @@ const Checkout = () => {
           )}
 
           {step === 3 && <OrderSummary address={selectedAddress} />}
+          
+          {step === 4 && <Payment />}
         </div>
       </div>
     </div>

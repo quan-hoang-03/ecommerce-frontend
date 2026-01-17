@@ -29,6 +29,13 @@ const DeliveryAddressForm = ({ onAddressSelected }) => {
     }));
   };
 
+  // Hàm tạo order với address
+  const handleCreateOrder = (address) => {
+    const orderData = { address, navigate };
+    dispatch(createOrder(orderData));
+    setRefetchTrigger((prev) => prev + 1);
+  };
+
   // Submit form địa chỉ mới
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -43,10 +50,7 @@ const DeliveryAddressForm = ({ onAddressSelected }) => {
       mobile: formData.mobile,
     };
 
-    const orderData = { address, navigate };
-    dispatch(createOrder(orderData));
-
-    setRefetchTrigger((prev) => prev + 1);
+    handleCreateOrder(address);
 
     // Xóa dữ liệu form sau khi lưu
     setFormData({
@@ -60,13 +64,19 @@ const DeliveryAddressForm = ({ onAddressSelected }) => {
     });
   };
 
+  // Xử lý khi chọn address từ danh sách đã lưu
+  const handleSelectSavedAddress = (addr) => {
+    console.log("Selected saved address:", addr);
+    handleCreateOrder(addr);
+  };
+
   return (
     <>
       {/* Saved Addresses */}
       <div className="space-y-4 mb-6">
         <AddressCard
           refetchTrigger={refetchTrigger}
-          onSelectAddress={onAddressSelected}
+          onSelectAddress={handleSelectSavedAddress}
         />
       </div>
 

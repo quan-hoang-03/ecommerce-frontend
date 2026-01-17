@@ -16,6 +16,7 @@ import avt from "../../../assets/img/logo-cosmetic.jpg";
 import AuthModel from "../../Auth/AuthModel";
 import { useDispatch, useSelector } from "react-redux";
 import { getUser, logout } from "../../State/Auth/Action";
+import { getCart } from "../../State/Cart/Action";
 import { API_BASE_URL, api } from "../../../config/apiConfig";
 
 function classNames(...classes) {
@@ -32,7 +33,7 @@ export default function Navigation() {
   const [categoriesFromAPI, setCategoriesFromAPI] = useState([]);
   const openUserMenu = Boolean(anchorEl);
   const jwt = localStorage.getItem("jwt");
-  const { auth } = useSelector((store) => store);
+  const { auth, cart } = useSelector((store) => store);
   const location = useLocation();
 
   // Fetch categories from API
@@ -181,6 +182,13 @@ export default function Navigation() {
       navigate(-1);
     }
   },[auth.user]);
+
+  // Fetch cart when user is logged in
+  useEffect(() => {
+    if (jwt) {
+      dispatch(getCart());
+    }
+  }, [jwt, dispatch]);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -580,13 +588,16 @@ export default function Navigation() {
 
                 {/* Cart */}
                 <div className="ml-4 flow-root lg:ml-6">
-                  <Button className="group -m-2 flex items-center p-2">
+                  <Button 
+                    className="group -m-2 flex items-center p-2"
+                    onClick={() => navigate("/cart")}
+                  >
                     <ShoppingBagIcon
                       className="h-6 w-6 flex-shrink-0 text-gray-400 group-hover:text-gray-500"
                       aria-hidden="true"
                     />
                     <span className="ml-2 text-sm font-medium text-gray-700 group-hover:text-gray-800">
-                      {/* {cart.cart?.totalItem} */}
+                      {cart.cart?.totalItem || 0}
                     </span>
                     <span className="sr-only">items in cart, view bag</span>
                   </Button>

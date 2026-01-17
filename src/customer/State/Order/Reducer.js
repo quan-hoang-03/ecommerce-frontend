@@ -54,24 +54,27 @@ export const orderReducer = (state = initialState,action) =>{
           error: action.payload,
         };
 
-    //   case GET_ORDER_HISTORY_REQUEST:
-    //     return {
-    //       loading: true,
-    //       orders: [],
-    //     };
+      case GET_ORDER_HISTORY_REQUEST:
+        return {
+          ...state,
+          loading: true,
+          error: null,
+        };
 
-    //   case GET_ORDER_HISTORY_SUCCESS:
-    //     return {
-    //       loading: false,
-    //       orders: action.payload,
-    //     };
+      case GET_ORDER_HISTORY_SUCCESS:
+        return {
+          ...state,
+          loading: false,
+          orders: action.payload,
+          error: null,
+        };
 
-    //   case GET_ORDER_HISTORY_FAILURE:
-    //     return {
-    //       loading: false,
-    //       error: action.payload,
-    //       orders: [],
-    //     };
+      case GET_ORDER_HISTORY_FAILURE:
+        return {
+          ...state,
+          loading: false,
+          error: action.payload,
+        };
 
       default:
         return state;

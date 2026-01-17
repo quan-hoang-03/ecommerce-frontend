@@ -7,6 +7,9 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { findProductById } from "../../State/Products/Action";
 import { addItemToCart } from "../../State/Cart/Action";
+import { API_BASE_URL } from "../../../config/apiConfig";
+import { useNotification } from "../../hooks/useNotification";
+import NotificationContainer from "../Notification/NotificationContainer";
 
 const StarRating = ({ value, size = "medium", readOnly = false }) => {
   const stars = [];
@@ -46,7 +49,8 @@ function classNames(...classes) {
 }
 
 export default function ProductDetails() {
-  const [selectedSize, setSelectedSize] = useState("");
+  const [selectedSize, setSelectedSize] = useState(null);
+  const { notifications, showWarning, removeNotification } = useNotification();
   const ratingData = [
     { label: "Excellent", value: 40, color: "#22c55e" },
     { label: "Very Good", value: 30, color: "#16a34a" },
@@ -56,7 +60,11 @@ export default function ProductDetails() {
   ];
   const navigate = useNavigate();
   const handAddToCart = () => {
-    const data = {productId: params.productId, size: selectedSize.name}
+    if (!selectedSize) {
+      showWarning("Vui lòng chọn size");
+      return;
+    }
+    const data = {productId: params.productId, size: selectedSize}
     console.log("data",data);
     dispatch(addItemToCart(data))
     navigate("/cart");
@@ -70,8 +78,10 @@ export default function ProductDetails() {
   //Bạn đang truy cập toàn bộ state gốc mà Redux đang quản lý.
   const { products } = useSelector((store) => store);
   console.log(products,"productttt")
-  console.log(products?.product?.content?.description,"content");
-  const productData = products?.product?.content || [];
+  console.log(products?.product,"product detail");
+  // Backend trả về một Product object đơn lẻ, không có property content
+  // Nên cần wrap nó trong array để map được
+  const productData = products?.product ? [products.product] : [];
   console.log(productData,"logData");
   const data = { productId: params.productId };
 
@@ -129,8 +139,15 @@ export default function ProductDetails() {
                 <div className="overflow-hidden rounded-lg max-w-[30rem] max-h-[35rem]">
                   <img
                     alt={item.title}
-                    src={item.imageUrl}
+                    src={
+                      item.imageUrl?.startsWith('http') 
+                        ? item.imageUrl 
+                        : `${API_BASE_URL}${item.imageUrl}`
+                    }
                     className="h-full w-full object-cover object-center"
+                    onError={(e) => {
+                      e.target.src = 'https://via.placeholder.com/500x600?text=No+Image';
+                    }}
                   />
                 </div>
               </div>
@@ -165,24 +182,55 @@ export default function ProductDetails() {
 
                     <fieldset aria-label="Choose a size" className="mt-4">
                       <div className="grid grid-cols-4 gap-3">
-                        {item.sizes?.map((size) => (
-                          <label
-                            key={size.id}
-                            aria-label={size.name}
-                            className="group relative flex items-center justify-center rounded-md border border-gray-300 bg-white p-3 has-[:checked]:border-indigo-600 has-[:disabled]:border-gray-400 has-[:checked]:bg-indigo-600 has-[:disabled]:bg-gray-200 has-[:disabled]:opacity-25 has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-indigo-600"
-                          >
-                            <input
-                              defaultValue={size.id}
-                              name="size"
-                              type="radio"
-                              disabled={!size.inStock}
-                              className="absolute inset-0 appearance-none focus:outline focus:outline-0 disabled:cursor-not-allowed cursor-pointer rounded-md"
-                            />
-                            <span className="text-sm font-medium uppercase text-gray-900 group-has-[:checked]:text-white">
-                              {size.name}
-                            </span>
-                          </label>
-                        ))}
+                        {item.sizes?.map((size) => {
+                          // Size model has 'name' and 'quantity', not 'inStock'
+                          // Check if quantity > 0 to determine if size is available
+                          const isInStock = (size.quantity !== undefined && size.quantity > 0) || 
+                                           (size.inStock !== undefined ? size.inStock : true);
+                          const sizeName = size.name || '';
+                          
+                          return (
+                            <label
+                              key={size.id || sizeName}
+                              aria-label={sizeName}
+                              className={`group relative flex items-center justify-center rounded-md border p-3 transition-all ${
+                                selectedSize === sizeName
+                                  ? 'border-indigo-600 bg-indigo-600'
+                                  : isInStock
+                                  ? 'border-gray-300 bg-white hover:border-indigo-400 cursor-pointer'
+                                  : 'border-gray-400 bg-gray-200 opacity-50 cursor-not-allowed'
+                              }`}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                if (isInStock) {
+                                  setSelectedSize(sizeName);
+                                }
+                              }}
+                            >
+                              <input
+                                value={size.id || sizeName}
+                                name="size"
+                                type="radio"
+                                disabled={!isInStock}
+                                checked={selectedSize === sizeName}
+                                onChange={(e) => {
+                                  e.stopPropagation();
+                                  if (isInStock) {
+                                    setSelectedSize(sizeName);
+                                  }
+                                }}
+                                className="absolute inset-0 appearance-none focus:outline focus:outline-0 disabled:cursor-not-allowed cursor-pointer rounded-md"
+                              />
+                              <span className={`text-sm font-medium uppercase ${
+                                selectedSize === sizeName
+                                  ? 'text-white'
+                                  : 'text-gray-900'
+                              }`}>
+                                {sizeName}
+                              </span>
+                            </label>
+                          );
+                        })}
                       </div>
                     </fieldset>
                   </div>
@@ -313,12 +361,17 @@ export default function ProductDetails() {
         <section className="pt-10">
           <h1 className="py-5 text-xl font-bold">Similer products</h1>
           <div className="flex flex-wrap space-y-5">
-            {products?.product?.content?.map((item) => (
-              <HomeSectionCard product={item} />
+            {products?.products?.content?.map((item) => (
+              <HomeSectionCard key={item.id} product={item} />
             ))}
           </div>
         </section>
       </div>
+
+      <NotificationContainer 
+        notifications={notifications} 
+        onRemove={removeNotification} 
+      />
     </div>
   );
 }

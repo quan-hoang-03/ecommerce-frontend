@@ -12,6 +12,8 @@ import { selectConversation } from "../../State/Chat/Action";
 import { API_BASE_URL } from "../../../config/apiConfig";
 import SockJS from "sockjs-client";
 import { Client } from "@stomp/stompjs";
+import { useNotification } from "../../hooks/useNotification";
+import NotificationContainer from "../Notification/NotificationContainer";
 
 const ChatBox = ({ isOpen, onClose, receiverId, receiverName, receiverAvatar }) => {
   const dispatch = useDispatch();
@@ -25,6 +27,7 @@ const ChatBox = ({ isOpen, onClose, receiverId, receiverName, receiverAvatar }) 
   const jwt = localStorage.getItem("jwt");
   const currentUser = auth.user;
   const messages = receiverId ? (chat.messages[receiverId] || []) : [];
+  const { notifications, showInfo, showError, removeNotification } = useNotification();
 
   useEffect(() => {
     if (isOpen && receiverId && jwt && currentUser) {
@@ -116,15 +119,15 @@ const ChatBox = ({ isOpen, onClose, receiverId, receiverName, receiverAvatar }) 
         break;
       case 'forward':
         // TODO: Implement forward functionality
-        alert('Tính năng chuyển tiếp đang được phát triển');
+        showInfo('Tính năng chuyển tiếp đang được phát triển');
         break;
       case 'pin':
         // TODO: Implement pin functionality
-        alert('Tính năng ghim đang được phát triển');
+        showInfo('Tính năng ghim đang được phát triển');
         break;
       case 'report':
         // TODO: Implement report functionality
-        alert('Tính năng báo cáo đang được phát triển');
+        showInfo('Tính năng báo cáo đang được phát triển');
         break;
       default:
         break;
@@ -146,7 +149,7 @@ const ChatBox = ({ isOpen, onClose, receiverId, receiverName, receiverAvatar }) 
 
     if (!currentUser || !currentUser.id) {
       console.error("Cannot send message: currentUser is not available", currentUser);
-      alert("Không thể gửi tin nhắn. Vui lòng đăng nhập lại.");
+      showError("Không thể gửi tin nhắn. Vui lòng đăng nhập lại.");
       return;
     }
 
@@ -156,7 +159,7 @@ const ChatBox = ({ isOpen, onClose, receiverId, receiverName, receiverAvatar }) 
       setMessage("");
     } catch (error) {
       console.error("Error sending message:", error);
-      alert("Không thể gửi tin nhắn. Vui lòng thử lại.");
+      showError("Không thể gửi tin nhắn. Vui lòng thử lại.");
     }
   };
 
@@ -169,7 +172,7 @@ const ChatBox = ({ isOpen, onClose, receiverId, receiverName, receiverAvatar }) 
       await dispatch(deleteMessage(jwt, messageId, receiverId));
     } catch (error) {
       console.error("Error deleting message:", error);
-      alert("Không thể thu hồi tin nhắn. Bạn chỉ có thể thu hồi tin nhắn của chính mình.");
+      showError("Không thể thu hồi tin nhắn. Bạn chỉ có thể thu hồi tin nhắn của chính mình.");
     }
   };
 
@@ -377,6 +380,11 @@ const ChatBox = ({ isOpen, onClose, receiverId, receiverName, receiverAvatar }) 
           </button>
         </div>
       </form>
+
+      <NotificationContainer 
+        notifications={notifications} 
+        onRemove={removeNotification} 
+      />
     </div>
   );
 };

@@ -3,6 +3,7 @@ import { Box, Typography, IconButton, Button } from "@mui/material";
 import { Add, Remove } from "@mui/icons-material";
 import { useDispatch } from "react-redux";
 import { getCart, removeItemToCart, updateItemToCart } from "../../State/Cart/Action";
+import { API_BASE_URL } from "../../../config/apiConfig";
 
 const CartItem = ({item}) => {
   const dispatch = useDispatch();
@@ -37,9 +38,16 @@ const CartItem = ({item}) => {
       {/* Ảnh sản phẩm */}
       <Box
         component="img"
-        src={item?.product?.imageUrl}
+        src={
+          item?.product?.imageUrl?.startsWith('http') 
+            ? item?.product?.imageUrl 
+            : `${API_BASE_URL}${item?.product?.imageUrl}`
+        }
         alt={item?.product?.title}
         sx={{ width: 120, height: 150, objectFit: "cover", borderRadius: 2 }}
+        onError={(e) => {
+          e.target.src = 'https://via.placeholder.com/120x150?text=No+Image';
+        }}
       />
 
       {/* Thông tin sản phẩm */}

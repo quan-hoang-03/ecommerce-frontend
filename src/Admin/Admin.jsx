@@ -21,6 +21,7 @@ import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import InventoryIcon from "@mui/icons-material/Inventory";
 import WarehouseIcon from "@mui/icons-material/Warehouse";
 import CategoryIcon from "@mui/icons-material/Category";
+import CancelIcon from "@mui/icons-material/Cancel";
 import LogoutIcon from "@mui/icons-material/Logout";
 
 // Components
@@ -32,6 +33,7 @@ import InventoryTable from "./components/InventoryTable";
 import AdminDashboard from "./components/Dashboard";
 import CategoryTable from "./components/CategoryTable";
 import AdminChat from "../customer/components/Chat/AdminChat";
+import OrderCancellationRequests from "./components/OrderCancellationRequests";
 
 // Sidebar menu
 const menu = [
@@ -41,6 +43,7 @@ const menu = [
   { name: "Quản lý kho", link: "/admin/inventory", icon: <WarehouseIcon /> },
   { name: "Người dùng", link: "/admin/customers", icon: <PersonIcon /> },
   { name: "Đơn hàng", link: "/admin/orders", icon: <ShoppingCartIcon /> },
+  { name: "Yêu cầu hủy đơn", link: "/admin/cancellation-requests", icon: <CancelIcon /> },
 ];
 
 const Admin = () => {
@@ -136,6 +139,7 @@ const Admin = () => {
             <Route path="/inventory" element={<InventoryTable />} />
             <Route path="/orders" element={<OrdersTable />} />
             <Route path="/customers" element={<CustomersTable />} />
+            <Route path="/cancellation-requests" element={<OrderCancellationRequests />} />
           </Routes>
         </div>
       </div>
