@@ -1,16 +1,21 @@
 /* Custom styles for HomeSectionCarousel */
 .alice-carousel__wrapper {
-  padding: 8px 0 20px;
+  padding: 4px 0 8px;
   overflow: visible;
 }
 
 .alice-carousel__stage {
   padding: 0 !important;
+  display: flex !important;
+  align-items: flex-start;
+  justify-content: flex-start;
 }
 
 .alice-carousel__stage-item {
   padding: 0;
   vertical-align: top;
+  box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 .alice-carousel__prev-btn,
@@ -20,45 +25,125 @@
 
 /* Smooth transitions */
 .alice-carousel__stage-item * {
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 /* Custom dot styles */
 .alice-carousel__dots {
-  margin-top: 24px;
+  margin-top: 16px;
   display: flex;
   justify-content: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .alice-carousel__dots-item {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   background-color: #e5e7eb;
   border-radius: 50%;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   border: none;
   padding: 0;
 }
 
 .alice-carousel__dots-item:hover {
-  background-color: #a5b4fc;
+  background-color: #f9a8d4;
   transform: scale(1.2);
 }
 
 .alice-carousel__dots-item.__active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  width: 28px;
-  border-radius: 4px;
+  background: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%);
+  width: 20px;
+  border-radius: 3px;
 }
 
-/* Card container in carousel */
+/* Card container in carousel - sắp xếp sát nhau */
 .alice-carousel__stage-item > div {
   height: 100%;
+  width: 100%;
+  display: block;
+}
+
+/* Giới hạn kích thước card responsive */
+.alice-carousel__stage-item > div > div {
+  width: 100%;
+  max-width: 240px;
+}
+
+@media (max-width: 1024px) {
+  .alice-carousel__stage-item > div > div {
+    max-width: 220px;
+  }
+}
+
+@media (max-width: 768px) {
+  .alice-carousel__stage-item > div > div {
+    max-width: 180px;
+  }
+}
+
+@media (max-width: 640px) {
+  .alice-carousel__stage-item > div > div {
+    max-width: 160px;
+  }
+}
+
+@media (max-width: 480px) {
+  .alice-carousel__stage-item > div > div {
+    max-width: 140px;
+  }
 }
 
 /* Prevent overflow issues */
 .alice-carousel {
   overflow: visible;
+}
+
+/* Đảm bảo items không stretch khi có ít items */
+.alice-carousel__stage-item {
+  min-width: 0;
+}
+
+/* Tính width dựa trên số items hiển thị */
+@media (min-width: 1280px) {
+  .alice-carousel__stage-item {
+    width: calc(100% / 5) !important;
+    max-width: calc(100% / 5) !important;
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .alice-carousel__stage-item {
+    width: calc(100% / 5) !important;
+    max-width: calc(100% / 5) !important;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .alice-carousel__stage-item {
+    width: calc(100% / 4) !important;
+    max-width: calc(100% / 4) !important;
+  }
+}
+
+@media (min-width: 640px) and (max-width: 767px) {
+  .alice-carousel__stage-item {
+    width: calc(100% / 3) !important;
+    max-width: calc(100% / 3) !important;
+  }
+}
+
+@media (min-width: 480px) and (max-width: 639px) {
+  .alice-carousel__stage-item {
+    width: calc(100% / 2.5) !important;
+    max-width: calc(100% / 2.5) !important;
+  }
+}
+
+@media (max-width: 479px) {
+  .alice-carousel__stage-item {
+    width: calc(100% / 2) !important;
+    max-width: calc(100% / 2) !important;
+  }
 }

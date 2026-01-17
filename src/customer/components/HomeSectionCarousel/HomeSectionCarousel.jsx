@@ -30,9 +30,12 @@ const HomeSectionCarousel = ({ data, sectionName, categoryName }) => {
   const isLoading = categoryName ? categoryLoading[categoryName] : false;
   
   const responsive = {
-    0: { items: 1 },
-    568: { items: 3 },
-    1024: { items: 5.5 },
+    0: { items: 2 },
+    480: { items: 2.5 },
+    640: { items: 3 },
+    768: { items: 4 },
+    1024: { items: 5 },
+    1280: { items: 5 },
   };
 
   const slidePrev = () => {
@@ -66,7 +69,7 @@ const HomeSectionCarousel = ({ data, sectionName, categoryName }) => {
   const items = productsData
     .slice(0, 10)
     .map((item, index) => (
-      <div key={item.id || index} className="px-2 py-3">
+      <div key={item.id || index} className="px-1.5 py-1">
         <HomeSectionCard product={mapProductData(item)} />
       </div>
     ));
@@ -74,11 +77,13 @@ const HomeSectionCarousel = ({ data, sectionName, categoryName }) => {
   // Tính toán số items hiển thị dựa trên responsive
   const getItemsToShow = () => {
     if (typeof window !== 'undefined') {
-      if (window.innerWidth >= 1024) return 5.5;
-      if (window.innerWidth >= 568) return 3;
-      return 1;
+      if (window.innerWidth >= 1024) return 5;
+      if (window.innerWidth >= 768) return 4;
+      if (window.innerWidth >= 640) return 3;
+      if (window.innerWidth >= 480) return 2.5;
+      return 2;
     }
-    return 5.5;
+    return 5;
   };
 
   const itemsToShow = getItemsToShow();
@@ -92,63 +97,52 @@ const HomeSectionCarousel = ({ data, sectionName, categoryName }) => {
   }
 
   return (
-    <div className="mb-16 relative">
+    <div className="mb-10 relative">
       {/* Section Header */}
-      <div className="flex items-center justify-between mb-8 px-2">
-        <div className="flex items-center gap-4">
+      <div className="flex items-center justify-between mb-4 px-1">
+        <div className="flex items-center gap-2">
           <div 
-            className="w-1.5 h-10 rounded-full"
-            style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
+            className="w-1 h-6 rounded-full"
+            style={{ background: 'linear-gradient(135deg, #ec4899 0%, #f43f5e 100%)' }}
           />
-          <div>
-            <h2 
-              className='text-2xl font-bold'
-              style={{
-                background: 'linear-gradient(135deg, #1a1a2e 0%, #4a4a6a 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text'
-              }}
-            >
-              {sectionName}
-            </h2>
-            <p className="text-sm text-gray-400 mt-0.5">Khám phá sản phẩm nổi bật</p>
-          </div>
+          <h2 className='text-lg font-bold text-gray-800'>
+            {sectionName}
+          </h2>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <a 
             href="#" 
-            className="hidden md:flex items-center gap-1 text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
+            className="hidden sm:flex items-center gap-0.5 text-xs font-medium text-pink-500 hover:text-pink-600 transition-colors"
           >
             Xem tất cả
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </a>
-          <div className="flex gap-2">
+          <div className="flex gap-1">
             <button
               onClick={slidePrev}
               disabled={!canSlidePrev}
-              className={`w-10 h-10 flex items-center justify-center rounded-full transition-all duration-300 ${
+              className={`w-8 h-8 flex items-center justify-center rounded-full transition-all duration-200 ${
                 canSlidePrev 
-                  ? 'bg-white hover:bg-indigo-50 text-gray-700 hover:text-indigo-600 shadow-lg hover:shadow-xl border border-gray-100' 
-                  : 'bg-gray-50 text-gray-300 cursor-not-allowed border border-gray-100'
+                  ? 'bg-white hover:bg-pink-50 text-gray-600 hover:text-pink-500 shadow border border-gray-100' 
+                  : 'bg-gray-50 text-gray-300 cursor-not-allowed'
               }`}
               aria-label="previous"
             >
-              <KeyboardArrowLeftIcon sx={{ fontSize: 24 }} />
+              <KeyboardArrowLeftIcon sx={{ fontSize: 20 }} />
             </button>
             <button
               onClick={slideNext}
               disabled={!canSlideNext}
-              className={`w-10 h-10 flex items-center justify-center rounded-full transition-all duration-300 ${
+              className={`w-8 h-8 flex items-center justify-center rounded-full transition-all duration-200 ${
                 canSlideNext 
-                  ? 'bg-white hover:bg-indigo-50 text-gray-700 hover:text-indigo-600 shadow-lg hover:shadow-xl border border-gray-100' 
-                  : 'bg-gray-50 text-gray-300 cursor-not-allowed border border-gray-100'
+                  ? 'bg-white hover:bg-pink-50 text-gray-600 hover:text-pink-500 shadow border border-gray-100' 
+                  : 'bg-gray-50 text-gray-300 cursor-not-allowed'
               }`}
               aria-label="next"
             >
-              <KeyboardArrowLeftIcon sx={{ transform: "rotate(180deg)", fontSize: 24 }} />
+              <KeyboardArrowLeftIcon sx={{ transform: "rotate(180deg)", fontSize: 20 }} />
             </button>
           </div>
         </div>
@@ -156,13 +150,8 @@ const HomeSectionCarousel = ({ data, sectionName, categoryName }) => {
       {/* Carousel Container */}
       <div className="relative">
         {isLoading ? (
-          <div className="flex justify-center items-center h-[20rem]">
-            <div className="flex flex-col items-center gap-4">
-              <div 
-                className="w-14 h-14 rounded-full border-4 border-gray-200 border-t-indigo-600 animate-spin"
-              />
-              <span className="text-sm text-gray-400">Đang tải sản phẩm...</span>
-            </div>
+          <div className="flex justify-center items-center h-48">
+            <div className="w-8 h-8 border-3 border-gray-200 border-t-pink-500 rounded-full animate-spin" />
           </div>
         ) : (
           <AliceCarousel
@@ -174,10 +163,11 @@ const HomeSectionCarousel = ({ data, sectionName, categoryName }) => {
             onSlideChange={syncActiveIndex}
             activeIndex={activeIndex}
             mouseTracking
-            animationDuration={600}
+            animationDuration={400}
             controlsStrategy="responsive"
             paddingLeft={0}
             paddingRight={0}
+            itemsFit="contain"
           />
         )}
       </div>

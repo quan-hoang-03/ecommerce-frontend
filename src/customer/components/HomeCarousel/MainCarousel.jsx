@@ -5,19 +5,19 @@ import { mainCarouselData } from "./MainCarouselData";
 
 const MainCarousel = () => {
   const items = mainCarouselData.map((item, index) => (
-    <div key={index} className="w-full h-[500px] md:h-[600px] lg:h-[700px] relative">
+    <div key={index} className="w-full h-[280px] sm:h-[320px] md:h-[380px] lg:h-[420px] relative">
       <img
         className="cursor-pointer w-full h-full object-cover"
         role="presentation"
         src={item.image}
         alt={item.alt}
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
     </div>
   ));
 
   return (
-    <div className="relative w-full overflow-hidden">
+    <div className="relative w-full overflow-hidden rounded-b-2xl shadow-lg">
       <AliceCarousel
         items={items}
         disableButtonsControls
@@ -25,7 +25,7 @@ const MainCarousel = () => {
         autoPlayInterval={4000}
         infinite
         mouseTracking
-        animationDuration={1000}
+        animationDuration={800}
         disableDotsControls={false}
       />
     </div>
