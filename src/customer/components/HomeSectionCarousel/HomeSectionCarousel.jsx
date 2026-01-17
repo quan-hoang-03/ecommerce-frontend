@@ -66,7 +66,9 @@ const HomeSectionCarousel = ({ data, sectionName, categoryName }) => {
   const items = productsData
     .slice(0, 10)
     .map((item, index) => (
-      <HomeSectionCard key={item.id || index} product={mapProductData(item)} />
+      <div key={item.id || index} className="px-2 py-3">
+        <HomeSectionCard product={mapProductData(item)} />
+      </div>
     ));
   
   // Tính toán số items hiển thị dựa trên responsive
@@ -90,40 +92,77 @@ const HomeSectionCarousel = ({ data, sectionName, categoryName }) => {
   }
 
   return (
-    <div className="mb-12">
-      <div className="flex items-center justify-between mb-6 px-2">
-        <h2 className='text-3xl font-bold text-gray-900'>{sectionName}</h2>
-        <div className="flex gap-2">
-          <button
-            onClick={slidePrev}
-            disabled={!canSlidePrev}
-            className={`p-2 rounded-full transition-all duration-200 ${
-              canSlidePrev 
-                ? 'bg-white hover:bg-gray-100 text-gray-700 shadow-md hover:shadow-lg' 
-                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-            }`}
-            aria-label="previous"
+    <div className="mb-16 relative">
+      {/* Section Header */}
+      <div className="flex items-center justify-between mb-8 px-2">
+        <div className="flex items-center gap-4">
+          <div 
+            className="w-1.5 h-10 rounded-full"
+            style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
+          />
+          <div>
+            <h2 
+              className='text-2xl font-bold'
+              style={{
+                background: 'linear-gradient(135deg, #1a1a2e 0%, #4a4a6a 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text'
+              }}
+            >
+              {sectionName}
+            </h2>
+            <p className="text-sm text-gray-400 mt-0.5">Khám phá sản phẩm nổi bật</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <a 
+            href="#" 
+            className="hidden md:flex items-center gap-1 text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
           >
-            <KeyboardArrowLeftIcon />
-          </button>
-          <button
-            onClick={slideNext}
-            disabled={!canSlideNext}
-            className={`p-2 rounded-full transition-all duration-200 ${
-              canSlideNext 
-                ? 'bg-white hover:bg-gray-100 text-gray-700 shadow-md hover:shadow-lg' 
-                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-            }`}
-            aria-label="next"
-          >
-            <KeyboardArrowLeftIcon sx={{ transform: "rotate(180deg)" }} />
-          </button>
+            Xem tất cả
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </a>
+          <div className="flex gap-2">
+            <button
+              onClick={slidePrev}
+              disabled={!canSlidePrev}
+              className={`w-10 h-10 flex items-center justify-center rounded-full transition-all duration-300 ${
+                canSlidePrev 
+                  ? 'bg-white hover:bg-indigo-50 text-gray-700 hover:text-indigo-600 shadow-lg hover:shadow-xl border border-gray-100' 
+                  : 'bg-gray-50 text-gray-300 cursor-not-allowed border border-gray-100'
+              }`}
+              aria-label="previous"
+            >
+              <KeyboardArrowLeftIcon sx={{ fontSize: 24 }} />
+            </button>
+            <button
+              onClick={slideNext}
+              disabled={!canSlideNext}
+              className={`w-10 h-10 flex items-center justify-center rounded-full transition-all duration-300 ${
+                canSlideNext 
+                  ? 'bg-white hover:bg-indigo-50 text-gray-700 hover:text-indigo-600 shadow-lg hover:shadow-xl border border-gray-100' 
+                  : 'bg-gray-50 text-gray-300 cursor-not-allowed border border-gray-100'
+              }`}
+              aria-label="next"
+            >
+              <KeyboardArrowLeftIcon sx={{ transform: "rotate(180deg)", fontSize: 24 }} />
+            </button>
+          </div>
         </div>
       </div>
-      <div className="relative px-2">
+      {/* Carousel Container */}
+      <div className="relative">
         {isLoading ? (
-          <div className="flex justify-center items-center h-[15rem]">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+          <div className="flex justify-center items-center h-[20rem]">
+            <div className="flex flex-col items-center gap-4">
+              <div 
+                className="w-14 h-14 rounded-full border-4 border-gray-200 border-t-indigo-600 animate-spin"
+              />
+              <span className="text-sm text-gray-400">Đang tải sản phẩm...</span>
+            </div>
           </div>
         ) : (
           <AliceCarousel
@@ -135,8 +174,10 @@ const HomeSectionCarousel = ({ data, sectionName, categoryName }) => {
             onSlideChange={syncActiveIndex}
             activeIndex={activeIndex}
             mouseTracking
-            animationDuration={800}
+            animationDuration={600}
             controlsStrategy="responsive"
+            paddingLeft={0}
+            paddingRight={0}
           />
         )}
       </div>
