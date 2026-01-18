@@ -58,9 +58,13 @@ const ProductsTable = () => {
          .get(`${API_BASE_URL}/api/admin/products/all`, {
            headers: {
              Authorization: `Bearer ${token}`,
+             'Accept': 'application/json;charset=UTF-8',
            },
+           responseType: 'json',
          })
          .then((res) => {
+           // Log để debug
+           console.log('Products received:', res.data);
            setProducts(res.data);
            // Reset về trang 1 nếu trang hiện tại không hợp lệ
            const maxPage = Math.ceil(res.data.length / itemsPerPage);

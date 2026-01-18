@@ -113,10 +113,10 @@ export default function ProductDetails() {
   };
 
   const handleAddToCart = () => {
-    if (!selectedSize) {
-      showWarning("Vui lòng chọn size trước khi thêm vào giỏ hàng");
-      return;
-    }
+    // if (!selectedSize) {
+    //   showWarning("Vui lòng chọn size trước khi thêm vào giỏ hàng");
+    //   return;
+    // }
     dispatch(addItemToCart({ productId: params.productId, size: selectedSize }));
     showSuccess("Đã thêm sản phẩm vào giỏ hàng");
     navigate("/cart");
@@ -378,10 +378,10 @@ export default function ProductDetails() {
               </button>
               <button
                 onClick={() => {
-                  if (!selectedSize && product.sizes?.length > 0) {
-                    showWarning("Vui lòng chọn size");
-                    return;
-                  }
+                  // if (!selectedSize && product.sizes?.length > 0) {
+                  //   showWarning("Vui lòng chọn size");
+                  //   return;
+                  // }
                   handleAddToCart();
                 }}
                 className="py-4 px-6 border-2 border-pink-500 text-pink-500 font-semibold rounded-xl hover:bg-pink-50 transition-all"

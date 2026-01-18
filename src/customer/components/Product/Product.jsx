@@ -119,8 +119,12 @@ export default function Product() {
   useEffect(() => {
     const [minPrice, maxPrice] =
       priceValue === null ? [0, 0] : priceValue.split("-").map(Number);
+    
+    // Sử dụng lavelThree nếu có, nếu không thì dùng lavelTwo (cấp 2)
+    const categoryName = param.lavelThree || param.lavelTwo || "";
+    
     const data = {
-      category: param.lavelThree,
+      category: categoryName,
       colors: colorValue || "",
       size: sizeValue || "",
       minPrice,
@@ -135,6 +139,7 @@ export default function Product() {
     dispatch(findProduct(data));
   }, [
     param.lavelThree,
+    param.lavelTwo,
     colorValue,
     sizeValue,
     priceValue,

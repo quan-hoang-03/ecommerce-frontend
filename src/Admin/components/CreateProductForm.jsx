@@ -21,6 +21,7 @@ import {
   IconButton,
   Card,
   CardMedia,
+  Backdrop,
 } from "@mui/material";
 import { api } from "../../config/apiConfig";
 import AddIcon from "@mui/icons-material/Add";
@@ -270,10 +271,7 @@ const CreateProductForm = () => {
       setError("Vui lòng chọn danh mục cấp 2");
       return false;
     }
-    if (!productData.thirdLavelCategory) {
-      setError("Vui lòng chọn danh mục cấp 3");
-      return false;
-    }
+    // Danh mục cấp 3 là tùy chọn, không bắt buộc
     return true;
   };
 
@@ -300,26 +298,32 @@ const CreateProductForm = () => {
       }
       
       const productPayload = {
-        ...productData,
-        imageUrl: imageUrlToSend || "", // Đảm bảo có imageUrl trong payload
-        price: parseInt(productData.price),
-        discountedPrice: productData.discountedPrice
+        title: productData.title,
+        description: productData.description || "",
+        imageUrl: imageUrlToSend || "",
+        price: parseInt(productData.price) || 0,
+        discountPrice: productData.discountedPrice
           ? parseInt(productData.discountedPrice)
-          : parseInt(productData.price),
+          : parseInt(productData.price) || 0,
         discountPersent: productData.discountPersent
           ? parseInt(productData.discountPersent)
           : 0,
         quantity: productData.quantity ? parseInt(productData.quantity) : 0,
+        brand: productData.brand || "",
+        colors: productData.color || "",
         size: productData.size.map((s) => ({
           name: s.name,
           quantity: parseInt(s.quantity) || 0,
         })),
+        topLavelCategory: productData.topLavelCategory || "",
+        secondLavelCategory: productData.secondLavelCategory || "",
+        thirdLavelCategory: productData.thirdLavelCategory || "",
       };
 
       formData.append(
         "product",
         new Blob([JSON.stringify(productPayload)], {
-          type: "application/json",
+          type: "application/json;charset=UTF-8",
         })
       );
 
@@ -401,6 +405,26 @@ const CreateProductForm = () => {
 
   return (
     <Fragment>
+      {/* Loading Overlay */}
+      <Backdrop
+        sx={{
+          color: "#fff",
+          zIndex: (theme) => theme.zIndex.drawer + 1,
+          backgroundColor: "rgba(0, 0, 0, 0.5)",
+        }}
+        open={loading}
+      >
+        <Box sx={{ textAlign: "center" }}>
+          <CircularProgress sx={{ color: "#fff", mb: 2 }} size={60} />
+          <Typography variant="h6" sx={{ color: "#fff", fontWeight: 600 }}>
+            Đang {isEditMode ? "cập nhật" : "tạo"} sản phẩm...
+          </Typography>
+          <Typography variant="body2" sx={{ color: "#fff", mt: 1, opacity: 0.9 }}>
+            Vui lòng đợi trong giây lát
+          </Typography>
+        </Box>
+      </Backdrop>
+
       <Box
         sx={{
           backgroundColor: "#f8fafc",
@@ -410,6 +434,9 @@ const CreateProductForm = () => {
           alignItems: "flex-start",
           py: 4,
           px: 2,
+          opacity: loading ? 0.5 : 1,
+          pointerEvents: loading ? "none" : "auto",
+          transition: "opacity 0.3s ease",
         }}
       >
         <Paper
@@ -819,13 +846,12 @@ const CreateProductForm = () => {
                         </td>
                       </tr>
                       <tr>
-                        <td>Danh mục cấp 3 *</td>
+                        <td>Danh mục cấp 3</td>
                         <td>
                           <FormControl
                             fullWidth
                             size="small"
                             variant="outlined"
-                            required
                             disabled={!productData.secondLavelCategory}
                           >
                             <Select
@@ -833,9 +859,13 @@ const CreateProductForm = () => {
                               value={productData.thirdLavelCategory}
                               onChange={handleChange}
                               disabled={loadingCategories}
+                              displayEmpty
                             >
+                              <MenuItem value="">
+                                <em>Không chọn</em>
+                              </MenuItem>
                               {categoryLevel3.length === 0 ? (
-                                <MenuItem disabled>Chọn danh mục cấp 2 trước</MenuItem>
+                                <MenuItem disabled>Chưa có danh mục cấp 3</MenuItem>
                               ) : (
                                 categoryLevel3.map((cat) => (
                                   <MenuItem key={cat.id} value={cat.name}>

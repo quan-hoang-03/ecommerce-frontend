@@ -142,6 +142,11 @@ export default function Navigation() {
     close();
   };
 
+  const handleSectionClick = (category, section, close) => {
+    navigate(`/${category.id}/${section.id}`);
+    close();
+  };
+
     useEffect(() => {
       if(jwt){
       dispatch(getUser(jwt));
@@ -363,7 +368,7 @@ export default function Navigation() {
         </Dialog>
       </Transition.Root>
 
-      <header className="relative bg-white">
+      <header className="relative bg-white z-50">
         <nav aria-label="Top" className="mx-auto">
           <div className="border-b border-gray-200">
             <div className="flex h-16 items-center px-11">
@@ -417,7 +422,7 @@ export default function Navigation() {
                             leaveFrom="opacity-100"
                             leaveTo="opacity-0"
                           >
-                            <Popover.Panel className="absolute inset-x-0 top-full text-sm text-gray-500">
+                            <Popover.Panel className="absolute inset-x-0 top-full text-sm text-gray-500 z-50">
                               {/* Presentational element used to render the bottom shadow, if we put the shadow on the actual panel it pokes out the top, so we use this shorter element to hide the top of the shadow */}
                               <div
                                 className="absolute inset-0 top-1/2 bg-white shadow"
@@ -464,7 +469,8 @@ export default function Navigation() {
                                         <div key={section.name}>
                                           <p
                                             id={`${section.name}-heading`}
-                                            className="font-medium text-gray-900"
+                                            onClick={() => handleSectionClick(category, section, close)}
+                                            className="font-medium text-gray-900 cursor-pointer hover:text-indigo-600 transition-colors"
                                           >
                                             {section.name}
                                           </p>
