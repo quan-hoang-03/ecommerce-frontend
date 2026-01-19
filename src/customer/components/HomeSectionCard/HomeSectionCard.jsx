@@ -108,7 +108,7 @@ const HomeSectionCard = ({product}) => {
         </h3>
 
         {/* Promotional Offers Section */}
-        {(hasPromo || hasFreeShipping) && (
+        {/* {(hasPromo || hasFreeShipping) && (
           <div className="space-y-1">
             {hasPromo && (
               <div className="px-1.5 py-1 bg-pink-50 border border-pink-200 rounded text-[9px] leading-tight">
@@ -125,7 +125,7 @@ const HomeSectionCard = ({product}) => {
               </div>
             )}
           </div>
-        )}
+        )} */}
 
         {/* Price and Rating Section */}
         <div className="mt-auto pt-2 border-t border-gray-200">

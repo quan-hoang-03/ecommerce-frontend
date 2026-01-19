@@ -240,7 +240,7 @@ const ProductsTable = () => {
                 </TableCell>
 
                 <TableCell align="left">
-                  <span className="text-gray-600">{item.category.name}</span>
+                  <span className="text-gray-600">{item.category?.displayName || item.category?.name || 'N/A'}</span>
                 </TableCell>
 
                 <TableCell align="left">

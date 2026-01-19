@@ -1,6 +1,6 @@
 import React from "react";
-import { Box, Typography, IconButton, Button } from "@mui/material";
-import { Add, Remove } from "@mui/icons-material";
+import { Box, Typography, IconButton } from "@mui/material";
+import { Add, Remove, Delete } from "@mui/icons-material";
 import { useDispatch } from "react-redux";
 import { getCart, removeItemToCart, updateItemToCart } from "../../State/Cart/Action";
 import { API_BASE_URL } from "../../../config/apiConfig";
@@ -92,9 +92,9 @@ const CartItem = ({item}) => {
             <Add />
           </IconButton>
 
-          <Button color="error" onClick={handleRemoveItem}>
-            Xóa
-          </Button>
+          <IconButton color="error" onClick={handleRemoveItem}>
+            <Delete />
+          </IconButton>
         </Box>
       </Box>
     </Box>
