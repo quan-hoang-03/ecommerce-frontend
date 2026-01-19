@@ -13,6 +13,7 @@ import UserProfile from '../customer/components/UserProfile/UserProfile';
 import CustomerChat from '../customer/components/Chat/CustomerChat';
 import PaymentSuccess from '../customer/components/Payment/PaymentSuccess';
 import PaymentCancel from '../customer/components/Payment/PaymentCancel';
+import CategoryProductsPage from '../customer/pages/CategoryProductsPage/CategoryProductsPage';
 
 const CustomerRoutes = () => {
   return (
@@ -27,6 +28,7 @@ const CustomerRoutes = () => {
         
         <Route path="/" element={<HomePage />}></Route>
         <Route path="/cart" element={<Cart />}></Route>
+        <Route path="/category/:categoryName" element={<CategoryProductsPage />}></Route>
         <Route path="/:lavelOne/:lavelTwo/:lavelThree" element={<Product />}></Route>
         <Route path="/:lavelOne/:lavelTwo" element={<Product />}></Route>
         <Route path="/product/:productId" element={<ProductDetails />}></Route>

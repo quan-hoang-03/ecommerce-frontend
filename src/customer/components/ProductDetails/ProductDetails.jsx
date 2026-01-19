@@ -517,12 +517,20 @@ export default function ProductDetails() {
               </svg>
               Sản phẩm tương tự
             </h2>
-            <a href="#" className="text-sm font-medium text-pink-500 hover:text-pink-600 flex items-center gap-1">
-              Xem tất cả
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </a>
+            {product?.category?.name && (
+              <button
+                onClick={() => {
+                  navigate(`/category/${product.category.name}`);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="text-sm font-medium text-pink-500 hover:text-pink-600 flex items-center gap-1 transition-colors cursor-pointer"
+              >
+                Xem tất cả
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            )}
           </div>
 
           {loadingSimilar ? (

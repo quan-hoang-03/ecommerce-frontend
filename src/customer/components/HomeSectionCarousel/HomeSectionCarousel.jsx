@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import AliceCarousel from "react-alice-carousel";
 import HomeSectionCard from '../HomeSectionCard/HomeSectionCard';
 import "./style.css"
@@ -11,6 +12,7 @@ const HomeSectionCarousel = ({ data, sectionName, categoryName }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const carouselRef = useRef(null);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   
   // Get products from Redux store (reducer is named 'products' in store.js)
   const { productsByCategory = {}, categoryLoading = {} } = useSelector((state) => state.products) || {};
@@ -101,32 +103,45 @@ const HomeSectionCarousel = ({ data, sectionName, categoryName }) => {
       {/* Section Header */}
       <div className="flex items-center justify-between mb-4 px-1">
         <div className="flex items-center gap-2">
-          <div 
+          <div
             className="w-1 h-6 rounded-full"
-            style={{ background: 'linear-gradient(135deg, #ec4899 0%, #f43f5e 100%)' }}
+            style={{
+              background: "linear-gradient(135deg, #ec4899 0%, #f43f5e 100%)",
+            }}
           />
-          <h2 className='text-lg font-bold text-gray-800'>
-            {sectionName}
-          </h2>
+          <h2 className="text-lg font-bold text-gray-800">{sectionName}</h2>
         </div>
         <div className="flex items-center gap-2">
-          <a 
-            href="#" 
-            className="hidden sm:flex items-center gap-0.5 text-xs font-medium text-pink-500 hover:text-pink-600 transition-colors"
-          >
-            Xem tất cả
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </a>
+          {categoryName && (
+            <button
+              onClick={() => navigate(`/category/${categoryName}`)}
+              className="hidden sm:flex items-center gap-0.5 text-sm font-medium text-pink-500 hover:text-pink-600 transition-colors cursor-pointer"
+            >
+              Xem tất cả
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-3.5 w-3.5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </button>
+          )}
           <div className="flex gap-1">
             <button
               onClick={slidePrev}
               disabled={!canSlidePrev}
               className={`w-8 h-8 flex items-center justify-center rounded-full transition-all duration-200 ${
-                canSlidePrev 
-                  ? 'bg-white hover:bg-pink-50 text-gray-600 hover:text-pink-500 shadow border border-gray-100' 
-                  : 'bg-gray-50 text-gray-300 cursor-not-allowed'
+                canSlidePrev
+                  ? "bg-white hover:bg-pink-50 text-gray-600 hover:text-pink-500 shadow border border-gray-100"
+                  : "bg-gray-50 text-gray-300 cursor-not-allowed"
               }`}
               aria-label="previous"
             >
@@ -136,13 +151,15 @@ const HomeSectionCarousel = ({ data, sectionName, categoryName }) => {
               onClick={slideNext}
               disabled={!canSlideNext}
               className={`w-8 h-8 flex items-center justify-center rounded-full transition-all duration-200 ${
-                canSlideNext 
-                  ? 'bg-white hover:bg-pink-50 text-gray-600 hover:text-pink-500 shadow border border-gray-100' 
-                  : 'bg-gray-50 text-gray-300 cursor-not-allowed'
+                canSlideNext
+                  ? "bg-white hover:bg-pink-50 text-gray-600 hover:text-pink-500 shadow border border-gray-100"
+                  : "bg-gray-50 text-gray-300 cursor-not-allowed"
               }`}
               aria-label="next"
             >
-              <KeyboardArrowLeftIcon sx={{ transform: "rotate(180deg)", fontSize: 20 }} />
+              <KeyboardArrowLeftIcon
+                sx={{ transform: "rotate(180deg)", fontSize: 20 }}
+              />
             </button>
           </div>
         </div>
