@@ -13,7 +13,7 @@ const CategoryProductsPage = () => {
   
   const searchParams = new URLSearchParams(location.search);
   const pageNumber = Number(searchParams.get('page')) || 1;
-  const itemsPerPage = 12;
+  const itemsPerPage = 16;
   
   const { productsByCategory = {}, categoryLoading = {} } = useSelector((state) => state.products) || {};
   const products = productsByCategory[categoryName] || [];
@@ -99,8 +99,10 @@ const CategoryProductsPage = () => {
                   discountPercent: product.discountPersent || product.discountPercent,
                 };
                 return (
-                  <Grid item xs={6} sm={4} md={3} key={product.id}>
-                    <ProductCard product={mappedProduct} />
+                  <Grid item xs={6} sm={4} md={2.4} lg={2.4} xl={2} key={product.id}>
+                    <Box sx={{ width: '100%' }}>
+                      <ProductCard product={mappedProduct} />
+                    </Box>
                   </Grid>
                 );
               })}

@@ -132,7 +132,7 @@ export default function Product() {
       minDiscount: discount || 0,
       sort: sortValue || "price_low",
       pageNumber: pageNumber - 1,
-      pageSize: 12,
+      pageSize: 15,
       stock: stock || "",
     };
 
@@ -504,7 +504,7 @@ export default function Product() {
 
               {/* Product grid */}
               <div className="lg:col-span-4 w-full">
-                <div className="flex flex-wrap justify-center bg-white py-5 gap-4">
+                <div className="flex flex-wrap justify-center bg-white pt-5 pb-2 gap-4">
                   {products.loading ? (
                     <div className="w-full text-center py-20">
                       <CircularProgress />
@@ -542,18 +542,16 @@ export default function Product() {
               : products.products?.totalPages || 1;
             
             return totalPages > 1 && (
-              <section className="w-full">
-                <div className="px-4 py-5 flex justify-center">
-                  <Pagination
-                    page={pageNumber}
-                    count={totalPages}
-                    color="secondary"
-                    onChange={handlePaginationChange}
-                    showFirstButton
-                    showLastButton
-                  />
-                </div>
-              </section>
+              <div className="w-full px-4 py-3 flex justify-center">
+                <Pagination
+                  page={pageNumber}
+                  count={totalPages}
+                  color="secondary"
+                  onChange={handlePaginationChange}
+                  showFirstButton
+                  showLastButton
+                />
+              </div>
             );
           })()}
         </main>
