@@ -95,6 +95,36 @@ export const sendMessage = (jwt, receiverId, content, currentUserId) => async (d
   }
 };
 
+// Send message with image
+export const sendMessageWithImage = (jwt, receiverId, content, imageFile, currentUserId) => async (dispatch) => {
+  dispatch(sendMessageRequest());
+  try {
+    const formData = new FormData();
+    formData.append("receiverId", receiverId.toString());
+    if (content) {
+      formData.append("content", content);
+    }
+    formData.append("image", imageFile);
+
+    const response = await axios.post(
+      `${API_BASE_URL}/api/chat/send-image`,
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${jwt}`,
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+    const message = { ...response.data, currentUserId };
+    dispatch(sendMessageSuccess(message));
+    return response.data;
+  } catch (error) {
+    dispatch(sendMessageFailure(error.message));
+    throw error;
+  }
+};
+
 // Receive message (from WebSocket)
 export const receiveMessage = (message, currentUserId) => ({
   type: "RECEIVE_MESSAGE",

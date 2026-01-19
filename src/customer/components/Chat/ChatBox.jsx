@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   fetchMessages,
   sendMessage,
+  sendMessageWithImage,
   receiveMessage,
   markAsRead,
   fetchUnreadCount,
@@ -24,6 +25,9 @@ const ChatBox = ({ isOpen, onClose, receiverId, receiverName, receiverAvatar }) 
   const [contextMenu, setContextMenu] = useState(null);
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [hoveredMessageId, setHoveredMessageId] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const fileInputRef = useRef(null);
   const jwt = localStorage.getItem("jwt");
   const currentUser = auth.user;
   const messages = receiverId ? (chat.messages[receiverId] || []) : [];
@@ -134,13 +138,48 @@ const ChatBox = ({ isOpen, onClose, receiverId, receiverName, receiverAvatar }) 
     }
   };
 
+  const handleImageSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith("image/")) {
+        showError("File phải là hình ảnh");
+        return;
+      }
+      
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        showError("Kích thước file không được vượt quá 5MB");
+        return;
+      }
+
+      setSelectedImage(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
   const handleSendMessage = async (e) => {
     e.preventDefault();
     
     // Validate inputs
-    if (!message.trim() || !receiverId || !jwt) {
+    if ((!message.trim() && !selectedImage) || !receiverId || !jwt) {
       console.warn("Cannot send message: missing required fields", {
         message: message.trim(),
+        selectedImage: !!selectedImage,
         receiverId,
         jwt: !!jwt,
       });
@@ -154,8 +193,20 @@ const ChatBox = ({ isOpen, onClose, receiverId, receiverName, receiverAvatar }) 
     }
 
     try {
-      console.log("Sending message:", { receiverId, message, currentUserId: currentUser.id });
-      await dispatch(sendMessage(jwt, receiverId, message, currentUser.id));
+      if (selectedImage) {
+        // Send message with image
+        console.log("Sending message with image:", { receiverId, message, currentUserId: currentUser.id });
+        await dispatch(sendMessageWithImage(jwt, receiverId, message, selectedImage, currentUser.id));
+        setSelectedImage(null);
+        setImagePreview(null);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+      } else {
+        // Send text message only
+        console.log("Sending message:", { receiverId, message, currentUserId: currentUser.id });
+        await dispatch(sendMessage(jwt, receiverId, message, currentUser.id));
+      }
       setMessage("");
     } catch (error) {
       console.error("Error sending message:", error);
@@ -197,34 +248,37 @@ const ChatBox = ({ isOpen, onClose, receiverId, receiverName, receiverAvatar }) 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed bottom-0 right-0 w-96 h-[600px] bg-white shadow-2xl rounded-t-lg flex flex-col z-50 border border-gray-200">
+    <div className="fixed bottom-0 right-0 w-96 h-[600px] bg-white shadow-2xl rounded-t-xl flex flex-col z-50 border border-gray-200 overflow-hidden">
       {/* Header */}
-      <div className="bg-blue-600 text-white p-4 rounded-t-lg flex items-center justify-between">
+      <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 flex items-center justify-between shadow-md">
         <div className="flex items-center space-x-3">
           {receiverAvatar ? (
             <img
               src={`${API_BASE_URL}${receiverAvatar}`}
               alt={receiverName}
-              className="w-10 h-10 rounded-full"
+              className="w-11 h-11 rounded-full border-2 border-white/30 shadow-md object-cover"
             />
           ) : (
-            <div className="w-10 h-10 rounded-full bg-blue-400 flex items-center justify-center">
-              <span className="text-white font-semibold">
+            <div className="w-11 h-11 rounded-full bg-blue-400 flex items-center justify-center border-2 border-white/30 shadow-md">
+              <span className="text-white font-semibold text-lg">
                 {receiverName?.charAt(0)?.toUpperCase()}
               </span>
             </div>
           )}
           <div>
-            <h3 className="font-semibold">{receiverName || "Admin"}</h3>
-            <p className="text-xs text-blue-100">Đang hoạt động</p>
+            <h3 className="font-semibold text-base">{receiverName || "Admin"}</h3>
+            <div className="flex items-center space-x-1">
+              <div className="w-2 h-2 bg-green-300 rounded-full animate-pulse"></div>
+              <p className="text-xs text-blue-100">Đang hoạt động</p>
+            </div>
           </div>
         </div>
         <button
           onClick={onClose}
-          className="text-white hover:text-gray-200 transition-colors"
+          className="text-white hover:bg-white/20 rounded-full p-1.5 transition-all duration-200"
         >
           <svg
-            className="w-6 h-6"
+            className="w-5 h-5"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -240,11 +294,16 @@ const ChatBox = ({ isOpen, onClose, receiverId, receiverName, receiverAvatar }) 
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 relative">
+      <div className="flex-1 overflow-y-auto p-4 space-y-3 relative bg-gradient-to-b from-gray-50 to-white">
         {messages.length === 0 ? (
-          <div className="text-center text-gray-500 mt-8">
-            <p>Chưa có tin nhắn nào</p>
-            <p className="text-sm mt-2">Bắt đầu cuộc trò chuyện!</p>
+          <div className="text-center text-gray-500 mt-12">
+            <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+            </div>
+            <p className="font-medium text-gray-700">Chưa có tin nhắn nào</p>
+            <p className="text-sm mt-1 text-gray-500">Bắt đầu cuộc trò chuyện!</p>
           </div>
         ) : (
           messages.map((msg) => {
@@ -254,15 +313,15 @@ const ChatBox = ({ isOpen, onClose, receiverId, receiverName, receiverAvatar }) 
             return (
               <div
                 key={msg.id}
-                className={`flex ${isSender ? "justify-end" : "justify-start"} relative`}
+                className={`flex ${isSender ? "justify-end" : "justify-start"} relative group`}
                 onMouseEnter={() => isSender && setHoveredMessageId(msg.id)}
                 onMouseLeave={() => setHoveredMessageId(null)}
               >
                 <div
-                  className={`message-bubble relative max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                  className={`message-bubble relative max-w-xs lg:max-w-md px-4 py-2.5 rounded-2xl shadow-sm transition-all duration-200 ${
                     isSender
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-200 text-gray-800"
+                      ? "bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-tr-sm"
+                      : "bg-white text-gray-800 border border-gray-200 rounded-tl-sm"
                   }`}
                 >
                   {isSender && (
@@ -280,7 +339,7 @@ const ChatBox = ({ isOpen, onClose, receiverId, receiverName, receiverAvatar }) 
                           });
                         }
                       }}
-                      className={`absolute -top-1 -right-1 transition-opacity duration-200 bg-gray-800 hover:bg-gray-700 text-white rounded-full p-1.5 shadow-lg z-10 cursor-pointer ${
+                      className={`absolute -top-1 -right-1 transition-all duration-200 bg-gray-800 hover:bg-gray-700 text-white rounded-full p-1.5 shadow-lg z-10 cursor-pointer hover:scale-110 ${
                         hoveredMessageId === msg.id ? 'opacity-100' : 'opacity-0'
                       }`}
                       title="Tùy chọn"
@@ -294,11 +353,21 @@ const ChatBox = ({ isOpen, onClose, receiverId, receiverName, receiverAvatar }) 
                       </svg>
                     </button>
                   )}
-                  <p className="text-sm">{msg.content}</p>
-                  <div className="flex items-center justify-between mt-1">
+                  {msg.imageUrl && (
+                    <div className="mb-2 rounded-xl overflow-hidden shadow-md">
+                      <img
+                        src={`${API_BASE_URL}${msg.imageUrl}`}
+                        alt="Chat image"
+                        className="max-w-full h-auto max-h-64 rounded-xl cursor-pointer hover:opacity-90 transition-opacity"
+                        onClick={() => window.open(`${API_BASE_URL}${msg.imageUrl}`, "_blank")}
+                      />
+                    </div>
+                  )}
+                  {msg.content && <p className="text-sm leading-relaxed break-words">{msg.content}</p>}
+                  <div className="flex items-center justify-end mt-1.5">
                     <p
                       className={`text-xs ${
-                        isSender ? "text-blue-100" : "text-gray-500"
+                        isSender ? "text-blue-100/80" : "text-gray-400"
                       }`}
                     >
                       {formatTime(msg.timestamp)}
@@ -315,7 +384,7 @@ const ChatBox = ({ isOpen, onClose, receiverId, receiverName, receiverAvatar }) 
       {/* Context Menu */}
       {contextMenu && selectedMessage && (
         <div
-          className="context-menu absolute bg-gray-800 text-white rounded-lg shadow-xl py-2 z-[60] min-w-[150px]"
+          className="context-menu absolute bg-white border border-gray-200 text-gray-800 rounded-xl shadow-2xl py-1 z-[60] min-w-[160px] overflow-hidden"
           style={{
             left: `${contextMenu.x}px`,
             top: `${contextMenu.y}px`,
@@ -324,59 +393,98 @@ const ChatBox = ({ isOpen, onClose, receiverId, receiverName, receiverAvatar }) 
         >
           <button
             onClick={() => handleContextMenuAction('delete', selectedMessage)}
-            className="w-full px-4 py-2 text-left hover:bg-gray-700 transition-colors flex items-center space-x-2"
+            className="w-full px-4 py-2.5 text-left hover:bg-red-50 transition-colors flex items-center space-x-3 text-gray-700 hover:text-red-600"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
             </svg>
-            <span>Thu hồi</span>
+            <span className="text-sm">Thu hồi</span>
           </button>
           <button
             onClick={() => handleContextMenuAction('forward', selectedMessage)}
-            className="w-full px-4 py-2 text-left hover:bg-gray-700 transition-colors flex items-center space-x-2"
+            className="w-full px-4 py-2.5 text-left hover:bg-blue-50 transition-colors flex items-center space-x-3 text-gray-700 hover:text-blue-600"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
             </svg>
-            <span>Chuyển tiếp</span>
+            <span className="text-sm">Chuyển tiếp</span>
           </button>
           <button
             onClick={() => handleContextMenuAction('pin', selectedMessage)}
-            className="w-full px-4 py-2 text-left hover:bg-gray-700 transition-colors flex items-center space-x-2"
+            className="w-full px-4 py-2.5 text-left hover:bg-yellow-50 transition-colors flex items-center space-x-3 text-gray-700 hover:text-yellow-600"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
             </svg>
-            <span>Ghim</span>
+            <span className="text-sm">Ghim</span>
           </button>
           <button
             onClick={() => handleContextMenuAction('report', selectedMessage)}
-            className="w-full px-4 py-2 text-left hover:bg-gray-700 transition-colors flex items-center space-x-2"
+            className="w-full px-4 py-2.5 text-left hover:bg-orange-50 transition-colors flex items-center space-x-3 text-gray-700 hover:text-orange-600"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
-            <span>Báo cáo</span>
+            <span className="text-sm">Báo cáo</span>
           </button>
         </div>
       )}
 
+      {/* Image Preview */}
+      {imagePreview && (
+        <div className="p-3 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-white relative">
+          <button
+            onClick={handleRemoveImage}
+            className="absolute top-3 right-3 bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center hover:bg-red-600 transition-all duration-200 shadow-lg hover:scale-110"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <img
+            src={imagePreview}
+            alt="Preview"
+            className="max-w-full h-auto max-h-32 rounded-xl shadow-sm"
+          />
+        </div>
+      )}
+
       {/* Input */}
-      <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-200">
-        <div className="flex space-x-2">
+      <form onSubmit={handleSendMessage} className="border-t border-gray-200 bg-white" style={{padding:"10px 0"}}>
+        <div className="flex items-center space-x-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageSelect}
+            className="hidden"
+            id="image-input"
+          />
+          <label
+            htmlFor="image-input"
+            className="px-3 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-200 cursor-pointer flex items-center justify-center shrink-0 hover:scale-105 active:scale-95 shadow-sm"
+            title="Chọn ảnh"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </label>
           <input
             type="text"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Nhập tin nhắn..."
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
           />
           <button
             type="submit"
-            disabled={!message.trim()}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+            disabled={!message.trim() && !selectedImage}
+            className="p-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all duration-200 shrink-0 shadow-md hover:shadow-lg disabled:shadow-none hover:scale-105 active:scale-95 flex items-center justify-center"
+            title="Gửi"
           >
-            Gửi
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
           </button>
         </div>
       </form>
