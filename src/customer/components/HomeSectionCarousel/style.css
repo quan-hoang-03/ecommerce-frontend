@@ -1,7 +1,13 @@
 /* Custom styles for HomeSectionCarousel */
+.alice-carousel {
+  overflow: hidden !important;
+  width: 100% !important;
+}
+
 .alice-carousel__wrapper {
   padding: 4px 0 8px;
-  overflow: visible;
+  overflow: hidden !important;
+  width: 100% !important;
 }
 
 .alice-carousel__stage {
@@ -9,10 +15,11 @@
   display: flex !important;
   align-items: flex-start;
   justify-content: flex-start;
+  width: 100% !important;
 }
 
 .alice-carousel__stage-item {
-  padding: 0;
+  padding: 0 6px;
   vertical-align: top;
   box-sizing: border-box;
   flex-shrink: 0;
@@ -58,92 +65,16 @@
   border-radius: 3px;
 }
 
-/* Card container in carousel - sắp xếp sát nhau */
+/* Card container in carousel */
 .alice-carousel__stage-item > div {
   height: 100%;
   width: 100%;
   display: block;
 }
 
-/* Giới hạn kích thước card responsive */
+/* Card fills the item */
 .alice-carousel__stage-item > div > div {
-  width: 100%;
-  max-width: 240px;
-}
-
-@media (max-width: 1024px) {
-  .alice-carousel__stage-item > div > div {
-    max-width: 220px;
-  }
-}
-
-@media (max-width: 768px) {
-  .alice-carousel__stage-item > div > div {
-    max-width: 180px;
-  }
-}
-
-@media (max-width: 640px) {
-  .alice-carousel__stage-item > div > div {
-    max-width: 160px;
-  }
-}
-
-@media (max-width: 480px) {
-  .alice-carousel__stage-item > div > div {
-    max-width: 140px;
-  }
-}
-
-/* Prevent overflow issues */
-.alice-carousel {
-  overflow: visible;
-}
-
-/* Đảm bảo items không stretch khi có ít items */
-.alice-carousel__stage-item {
-  min-width: 0;
-}
-
-/* Tính width dựa trên số items hiển thị */
-@media (min-width: 1280px) {
-  .alice-carousel__stage-item {
-    width: calc(100% / 5) !important;
-    max-width: calc(100% / 5) !important;
-  }
-}
-
-@media (min-width: 1024px) and (max-width: 1279px) {
-  .alice-carousel__stage-item {
-    width: calc(100% / 5) !important;
-    max-width: calc(100% / 5) !important;
-  }
-}
-
-@media (min-width: 768px) and (max-width: 1023px) {
-  .alice-carousel__stage-item {
-    width: calc(100% / 4) !important;
-    max-width: calc(100% / 4) !important;
-  }
-}
-
-@media (min-width: 640px) and (max-width: 767px) {
-  .alice-carousel__stage-item {
-    width: calc(100% / 3) !important;
-    max-width: calc(100% / 3) !important;
-  }
-}
-
-@media (min-width: 480px) and (max-width: 639px) {
-  .alice-carousel__stage-item {
-    width: calc(100% / 2.5) !important;
-    max-width: calc(100% / 2.5) !important;
-  }
-}
-
-@media (max-width: 479px) {
-  .alice-carousel__stage-item {
-    width: calc(100% / 2) !important;
-    max-width: calc(100% / 2) !important;
-  }
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
 }
