@@ -84,11 +84,32 @@ const CreateProductForm = () => {
 
   // Reset success state when component mounts or route changes
   useEffect(() => {
-    dispatch(resetProductState()); // Reset Redux state
+    // Reset local state
     setSuccess(false);
     setError("");
     setLoading(false);
-  }, [productId, dispatch]); // Reset when productId changes (switch between create/edit)
+    setImageFile(null);
+    // Reset Redux state để đảm bảo không còn success state từ lần trước
+    dispatch(resetProductState());
+    // Reset form data khi vào create mode (không phải edit mode)
+    if (!isEditMode) {
+      setProductData({
+        imageUrl: "",
+        brand: "",
+        title: "",
+        color: "",
+        discountedPrice: "",
+        price: "",
+        discountPersent: "",
+        size: initialSizes,
+        quantity: "",
+        topLavelCategory: "",
+        secondLavelCategory: "",
+        thirdLavelCategory: "",
+        description: "",
+      });
+    }
+  }, [productId, dispatch, isEditMode]); // Reset when productId changes (switch between create/edit)
 
   // Auto calculate discount percentage
   useEffect(() => {
@@ -183,7 +204,14 @@ const CreateProductForm = () => {
       // Chỉ tự động chuyển hướng khi tạo mới, không chuyển khi cập nhật
       if (!isEditMode) {
         setTimeout(() => {
+          // Reset Redux state trước khi navigate để tránh trigger lại khi vào lại form
+          dispatch(resetProductState());
           navigate("/admin/products");
+        }, 2000);
+      } else {
+        // Reset state sau khi cập nhật thành công
+        setTimeout(() => {
+          dispatch(resetProductState());
         }, 2000);
       }
     }
@@ -191,7 +219,7 @@ const CreateProductForm = () => {
       setError(products.error);
       setLoading(false);
     }
-  }, [products.success, products.error, navigate, products, isEditMode]);
+  }, [products.success, products.error, navigate, products, isEditMode, dispatch]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -267,11 +295,7 @@ const CreateProductForm = () => {
       setError("Vui lòng chọn danh mục cấp 1");
       return false;
     }
-    if (!productData.secondLavelCategory) {
-      setError("Vui lòng chọn danh mục cấp 2");
-      return false;
-    }
-    // Danh mục cấp 3 là tùy chọn, không bắt buộc
+    // Danh mục cấp 2 và cấp 3 là tùy chọn, không bắt buộc
     return true;
   };
 
@@ -817,13 +841,12 @@ const CreateProductForm = () => {
                         </td>
                       </tr>
                       <tr>
-                        <td>Danh mục cấp 2 *</td>
+                        <td>Danh mục cấp 2</td>
                         <td>
                           <FormControl
                             fullWidth
                             size="small"
                             variant="outlined"
-                            required
                             disabled={!productData.topLavelCategory}
                           >
                             <Select
@@ -831,9 +854,13 @@ const CreateProductForm = () => {
                               value={productData.secondLavelCategory}
                               onChange={handleChange}
                               disabled={loadingCategories}
+                              displayEmpty
                             >
+                              <MenuItem value="">
+                                <em>Không chọn</em>
+                              </MenuItem>
                               {categoryLevel2.length === 0 ? (
-                                <MenuItem disabled>Chọn danh mục cấp 1 trước</MenuItem>
+                                <MenuItem disabled>Chưa có danh mục cấp 2</MenuItem>
                               ) : (
                                 categoryLevel2.map((cat) => (
                                   <MenuItem key={cat.id} value={cat.name}>
