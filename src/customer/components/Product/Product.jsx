@@ -504,7 +504,7 @@ export default function Product() {
 
               {/* Product grid */}
               <div className="lg:col-span-4 w-full">
-                <div className="flex flex-wrap justify-center bg-white pt-5 pb-2 gap-4">
+                <div className="flex flex-wrap justify-start bg-white pt-5 pb-2 gap-4">
                   {products.loading ? (
                     <div className="w-full text-center py-20">
                       <CircularProgress />
