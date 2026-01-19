@@ -246,3 +246,33 @@ export const deleteMessage = (jwt, messageId, userId) => async (dispatch) => {
     throw error;
   }
 };
+
+// Delete conversation
+const deleteConversationRequest = () => ({
+  type: "DELETE_CONVERSATION_REQUEST",
+});
+
+const deleteConversationSuccess = (userId) => ({
+  type: "DELETE_CONVERSATION_SUCCESS",
+  payload: userId,
+});
+
+const deleteConversationFailure = (error) => ({
+  type: "DELETE_CONVERSATION_FAILURE",
+  payload: error,
+});
+
+export const deleteConversation = (jwt, userId) => async (dispatch) => {
+  dispatch(deleteConversationRequest());
+  try {
+    await axios.delete(`${API_BASE_URL}/api/chat/conversation/${userId}`, {
+      headers: {
+        Authorization: `Bearer ${jwt}`,
+      },
+    });
+    dispatch(deleteConversationSuccess(userId));
+  } catch (error) {
+    dispatch(deleteConversationFailure(error.message));
+    throw error;
+  }
+};

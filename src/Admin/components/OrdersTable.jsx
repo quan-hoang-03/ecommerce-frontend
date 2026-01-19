@@ -327,8 +327,25 @@ const OrdersTable = () => {
         />
         <TableContainer
           component={Paper}
-          className="overflow-hidden"
-          sx={{ maxHeight: "calc(100vh - 500px)" }}
+          sx={{ 
+            maxHeight: "calc(100vh - 500px)",
+            overflowX: "auto",
+            overflowY: "auto",
+            "&::-webkit-scrollbar": {
+              width: "8px",
+              height: "8px",
+            },
+            "&::-webkit-scrollbar-track": {
+              background: "#f1f1f1",
+            },
+            "&::-webkit-scrollbar-thumb": {
+              background: "#c1c1c1",
+              borderRadius: "4px",
+            },
+            "&::-webkit-scrollbar-thumb:hover": {
+              background: "#a8a8a8",
+            },
+          }}
         >
         <Table sx={{ minWidth: 650 }} aria-label="simple table">
           <TableHead sx={{ bgcolor: "#f8fafc" }}>

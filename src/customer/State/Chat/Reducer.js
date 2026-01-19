@@ -19,6 +19,9 @@ import {
   DELETE_MESSAGE_REQUEST,
   DELETE_MESSAGE_SUCCESS,
   DELETE_MESSAGE_FAILURE,
+  DELETE_CONVERSATION_REQUEST,
+  DELETE_CONVERSATION_SUCCESS,
+  DELETE_CONVERSATION_FAILURE,
 } from "./ActionType";
 
 const initialState = {
@@ -38,6 +41,7 @@ const chatReducer = (state = initialState, action) => {
     case FETCH_UNREAD_COUNT_REQUEST:
     case MARK_AS_READ_REQUEST:
     case DELETE_MESSAGE_REQUEST:
+    case DELETE_CONVERSATION_REQUEST:
       return {
         ...state,
         isLoading: true,
@@ -58,6 +62,7 @@ const chatReducer = (state = initialState, action) => {
     case FETCH_UNREAD_COUNT_FAILURE:
     case MARK_AS_READ_FAILURE:
     case DELETE_MESSAGE_FAILURE:
+    case DELETE_CONVERSATION_FAILURE:
       return {
         ...state,
         isLoading: false,
@@ -137,6 +142,19 @@ const chatReducer = (state = initialState, action) => {
           ...state.messages,
           [deleteUserId]: filteredMessages,
         },
+        error: null,
+      };
+    }
+
+    case DELETE_CONVERSATION_SUCCESS: {
+      const deletedUserId = action.payload;
+      const updatedMessages = { ...state.messages };
+      delete updatedMessages[deletedUserId];
+      
+      return {
+        ...state,
+        isLoading: false,
+        messages: updatedMessages,
         error: null,
       };
     }

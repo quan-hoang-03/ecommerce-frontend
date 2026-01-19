@@ -7,6 +7,7 @@ import {
   reduceInventory,
   deleteInventory,
 } from '../../customer/State/Admin/Inventory/Action';
+import { API_BASE_URL } from '../../config/apiConfig';
 import {
   Avatar,
   Button,
@@ -30,6 +31,8 @@ import {
   DialogActions,
   TextField,
   Box,
+  Pagination,
+  Typography,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -46,6 +49,8 @@ const InventoryTable = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [quantity, setQuantity] = useState(0);
+  const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(10);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -55,6 +60,15 @@ const InventoryTable = () => {
   useEffect(() => {
     dispatch(getInventory());
   }, []);
+
+  // Tự động điều chỉnh trang khi dữ liệu thay đổi
+  useEffect(() => {
+    const inventory = adminInventory?.inventory || [];
+    const totalPages = Math.ceil(inventory.length / rowsPerPage);
+    if (page > totalPages && totalPages > 0) {
+      setPage(totalPages);
+    }
+  }, [adminInventory?.inventory, page, rowsPerPage]);
 
   const handleCloseSnackbar = (event, reason) => {
     if (reason === "clickaway") {
@@ -217,6 +231,17 @@ const InventoryTable = () => {
     }
   };
 
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  // Tính toán dữ liệu phân trang
+  const inventory = adminInventory?.inventory || [];
+  const totalPages = Math.ceil(inventory.length / rowsPerPage);
+  const startIndex = (page - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const paginatedInventory = inventory.slice(startIndex, endIndex);
+
   return (
     <div className="p-5 bg-gray-50 min-h-screen">
       <Card className="mt-2 shadow-md rounded-2xl" sx={{ bgcolor: "white" }}>
@@ -252,7 +277,16 @@ const InventoryTable = () => {
           </TableHead>
 
           <TableBody>
-            {adminInventory?.inventory?.map((product) => (
+            {paginatedInventory.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Không có sản phẩm nào trong kho
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            ) : (
+              paginatedInventory.map((product) => (
               <TableRow
                 key={product.id}
                 sx={{
@@ -263,15 +297,22 @@ const InventoryTable = () => {
               >
                 <TableCell align="center">
                   <Avatar
-                    src={product.imageUrl}
+                    src={product.imageUrl ? (product.imageUrl.startsWith('http') ? product.imageUrl : `${API_BASE_URL}${product.imageUrl}`) : ''}
                     alt={product.title}
                     sx={{
                       width: 60,
                       height: 60,
                       borderRadius: 2,
                       boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
+                      bgcolor: product.imageUrl ? 'transparent' : '#e5e7eb',
                     }}
-                  />
+                  >
+                    {!product.imageUrl && (
+                      <span className="text-gray-600 font-semibold text-lg">
+                        {product.title?.charAt(0)?.toUpperCase() || '?'}
+                      </span>
+                    )}
+                  </Avatar>
                 </TableCell>
 
                 <TableCell>
@@ -337,10 +378,30 @@ const InventoryTable = () => {
                   </Box>
                 </TableCell>
               </TableRow>
-            ))}
+              ))
+            )}
           </TableBody>
         </Table>
       </TableContainer>
+
+      {/* Pagination và thông tin */}
+      {inventory.length > 0 && (
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 3, px: 2 }}>
+          <Typography variant="body2" color="text.secondary">
+            Hiển thị {startIndex + 1} - {Math.min(endIndex, inventory.length)} trong tổng số {inventory.length} sản phẩm
+          </Typography>
+          <Pagination
+            count={totalPages}
+            page={page}
+            onChange={handleChangePage}
+            color="primary"
+            shape="rounded"
+            size="large"
+            showFirstButton
+            showLastButton
+          />
+        </Box>
+      )}
 
       {/* Dialog Sửa số lượng */}
       <Dialog open={editDialogOpen} onClose={handleCloseEditDialog}>

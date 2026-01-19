@@ -8,6 +8,7 @@ import {
   markAsRead,
   fetchUnreadCount,
   deleteMessage,
+  deleteConversation,
 } from "../../State/Chat/Action";
 import { selectConversation } from "../../State/Chat/Action";
 import { API_BASE_URL } from "../../../config/apiConfig";
@@ -15,6 +16,14 @@ import SockJS from "sockjs-client";
 import { Client } from "@stomp/stompjs";
 import { useNotification } from "../../hooks/useNotification";
 import NotificationContainer from "../Notification/NotificationContainer";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Button,
+} from "@mui/material";
 
 const ChatBox = ({ isOpen, onClose, receiverId, receiverName, receiverAvatar }) => {
   const dispatch = useDispatch();
@@ -28,6 +37,9 @@ const ChatBox = ({ isOpen, onClose, receiverId, receiverName, receiverAvatar }) 
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
+  const [deleteMessageDialogOpen, setDeleteMessageDialogOpen] = useState(false);
+  const [deleteConversationDialogOpen, setDeleteConversationDialogOpen] = useState(false);
+  const [messageToDelete, setMessageToDelete] = useState(null);
   const jwt = localStorage.getItem("jwt");
   const currentUser = auth.user;
   const messages = receiverId ? (chat.messages[receiverId] || []) : [];
@@ -119,7 +131,7 @@ const ChatBox = ({ isOpen, onClose, receiverId, receiverName, receiverAvatar }) 
     switch (action) {
       case 'delete':
         // "Thu hồi" = Xóa tin nhắn
-        await handleDeleteMessage(msg.id);
+        handleOpenDeleteMessageDialog(msg.id);
         break;
       case 'forward':
         // TODO: Implement forward functionality
@@ -214,16 +226,48 @@ const ChatBox = ({ isOpen, onClose, receiverId, receiverName, receiverAvatar }) 
     }
   };
 
-  const handleDeleteMessage = async (messageId) => {
-    if (!window.confirm("Bạn có chắc chắn muốn thu hồi tin nhắn này?")) {
-      return;
-    }
+  const handleOpenDeleteMessageDialog = (messageId) => {
+    setMessageToDelete(messageId);
+    setDeleteMessageDialogOpen(true);
+  };
+
+  const handleCloseDeleteMessageDialog = () => {
+    setDeleteMessageDialogOpen(false);
+    setMessageToDelete(null);
+  };
+
+  const handleDeleteMessage = async () => {
+    if (!messageToDelete) return;
 
     try {
-      await dispatch(deleteMessage(jwt, messageId, receiverId));
+      await dispatch(deleteMessage(jwt, messageToDelete, receiverId));
+      handleCloseDeleteMessageDialog();
     } catch (error) {
       console.error("Error deleting message:", error);
       showError("Không thể thu hồi tin nhắn. Bạn chỉ có thể thu hồi tin nhắn của chính mình.");
+      handleCloseDeleteMessageDialog();
+    }
+  };
+
+  const handleOpenDeleteConversationDialog = () => {
+    setDeleteConversationDialogOpen(true);
+  };
+
+  const handleCloseDeleteConversationDialog = () => {
+    setDeleteConversationDialogOpen(false);
+  };
+
+  const handleDeleteConversation = async () => {
+    try {
+      await dispatch(deleteConversation(jwt, receiverId));
+      showInfo("Đã xóa toàn bộ cuộc trò chuyện thành công");
+      handleCloseDeleteConversationDialog();
+      // Refresh messages to show empty state
+      dispatch(fetchMessages(jwt, receiverId));
+    } catch (error) {
+      console.error("Error deleting conversation:", error);
+      showError("Không thể xóa cuộc trò chuyện. Vui lòng thử lại.");
+      handleCloseDeleteConversationDialog();
     }
   };
 
@@ -273,24 +317,45 @@ const ChatBox = ({ isOpen, onClose, receiverId, receiverName, receiverAvatar }) 
             </div>
           </div>
         </div>
-        <button
-          onClick={onClose}
-          className="text-white hover:bg-white/20 rounded-full p-1.5 transition-all duration-200"
-        >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={handleOpenDeleteConversationDialog}
+            className="text-white hover:bg-white/20 rounded-full p-1.5 transition-all duration-200"
+            title="Xóa cuộc trò chuyện"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              />
+            </svg>
+          </button>
+          <button
+            onClick={onClose}
+            className="text-white hover:bg-white/20 rounded-full p-1.5 transition-all duration-200"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* Messages */}
@@ -488,6 +553,82 @@ const ChatBox = ({ isOpen, onClose, receiverId, receiverName, receiverAvatar }) 
           </button>
         </div>
       </form>
+
+      {/* Dialog xác nhận xóa tin nhắn */}
+      <Dialog
+        open={deleteMessageDialogOpen}
+        onClose={handleCloseDeleteMessageDialog}
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            minWidth: 400,
+          },
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 600, pb: 1 }}>
+          Xác nhận thu hồi tin nhắn
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ fontSize: "0.95rem" }}>
+            Bạn có chắc chắn muốn thu hồi tin nhắn này?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            onClick={handleCloseDeleteMessageDialog}
+            variant="outlined"
+            sx={{ textTransform: "none" }}
+          >
+            Hủy
+          </Button>
+          <Button
+            onClick={handleDeleteMessage}
+            variant="contained"
+            color="error"
+            sx={{ textTransform: "none" }}
+          >
+            Thu hồi
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog xác nhận xóa cuộc trò chuyện */}
+      <Dialog
+        open={deleteConversationDialogOpen}
+        onClose={handleCloseDeleteConversationDialog}
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            minWidth: 400,
+          },
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 600, pb: 1 }}>
+          Xác nhận xóa cuộc trò chuyện
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ fontSize: "0.95rem" }}>
+            Bạn có chắc chắn muốn xóa toàn bộ cuộc trò chuyện này?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            onClick={handleCloseDeleteConversationDialog}
+            variant="outlined"
+            sx={{ textTransform: "none" }}
+          >
+            Hủy
+          </Button>
+          <Button
+            onClick={handleDeleteConversation}
+            variant="contained"
+            color="error"
+            sx={{ textTransform: "none" }}
+          >
+            Xóa
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <NotificationContainer 
         notifications={notifications} 
