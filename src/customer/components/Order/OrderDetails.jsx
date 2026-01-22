@@ -8,6 +8,7 @@ import { Box, Grid } from "@mui/material";
 import { deepPurple } from "@mui/material/colors";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
 import { API_BASE_URL } from "../../../config/apiConfig";
+import { formatPrice } from "../../../utils/formatPrice";
 
 const OrderDetails = () => {
   const { orderId } = useParams();
@@ -28,13 +29,6 @@ const OrderDetails = () => {
     return `${API_BASE_URL}${imageUrl.startsWith("/") ? "" : "/"}${imageUrl}`;
   };
 
-  const formatPrice = (price) => {
-    if (!price) return "0 ₫";
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(price);
-  };
 
   const getOrderStatusStep = (status) => {
     const statusMap = {

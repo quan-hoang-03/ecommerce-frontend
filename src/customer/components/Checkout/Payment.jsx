@@ -8,6 +8,7 @@ import { API_BASE_URL } from "../../../config/apiConfig";
 import AddressCard from "../AddressCard/AddressCard";
 import { useNotification } from "../../hooks/useNotification";
 import NotificationContainer from "../Notification/NotificationContainer";
+import { formatPrice } from "../../../utils/formatPrice";
 
 const Payment = () => {
   const dispatch = useDispatch();
@@ -92,36 +93,45 @@ const Payment = () => {
 
           <div className="bg-gray-50 p-4 rounded-lg">
             <h3 className="font-semibold text-lg mb-3">Sản phẩm</h3>
-            {order.order?.orderItems?.map((item) => (
-              <div key={item.id} className="flex items-center gap-3 py-2 border-b">
-                <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center overflow-hidden">
-                  {item.product?.imageUrl ? (
-                    <img
-                      src={item.product.imageUrl}
-                      alt={item.product?.title || "Sản phẩm"}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                        e.target.nextSibling.style.display = 'flex';
-                      }}
-                    />
-                  ) : null}
-                  <span 
-                    className="text-gray-400 text-xs text-center"
-                    style={{ display: item.product?.imageUrl ? 'none' : 'flex' }}
-                  >
-                    No Image
-                  </span>
+            {order.order?.orderItems?.map((item) => {
+              // Xử lý imageUrl - kiểm tra xem có phải đường dẫn tuyệt đối không
+              const imageUrl = item.product?.imageUrl
+                ? item.product.imageUrl.startsWith('http')
+                  ? item.product.imageUrl
+                  : `${API_BASE_URL}${item.product.imageUrl.startsWith('/') ? '' : '/'}${item.product.imageUrl}`
+                : null;
+              
+              return (
+                <div key={item.id} className="flex items-center gap-3 py-2 border-b">
+                  <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center overflow-hidden">
+                    {imageUrl ? (
+                      <img
+                        src={imageUrl}
+                        alt={item.product?.title || "Sản phẩm"}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <span 
+                      className="text-gray-400 text-xs text-center"
+                      style={{ display: imageUrl ? 'none' : 'flex' }}
+                    >
+                      No Image
+                    </span>
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium">{item.product?.title || "Sản phẩm"}</p>
+                    <p className="text-sm text-gray-500">
+                      Size: {item.size} | SL: {item.quantity}
+                    </p>
+                  </div>
+                  <p className="font-semibold">{formatPrice(item.discountedPrice || item.price || 0)}</p>
                 </div>
-                <div className="flex-1">
-                  <p className="font-medium">{item.product?.title || "Sản phẩm"}</p>
-                  <p className="text-sm text-gray-500">
-                    Size: {item.size} | SL: {item.quantity}
-                  </p>
-                </div>
-                <p className="font-semibold">{(item.discountedPrice || item.price || 0).toLocaleString()} Đ</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
@@ -190,13 +200,13 @@ const Payment = () => {
 
             <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
               <Typography>Tạm tính</Typography>
-              <Typography>{order.order?.totalPrice?.toLocaleString()} Đ</Typography>
+              <Typography>{formatPrice(order.order?.totalPrice)}</Typography>
             </Box>
 
             <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
               <Typography>Giảm giá</Typography>
               <Typography sx={{ color: "green" }}>
-                -{order.order?.discount?.toLocaleString() || 0} Đ
+                -{formatPrice(order.order?.discount || 0)}
               </Typography>
             </Box>
 
@@ -212,7 +222,7 @@ const Payment = () => {
                 Tổng cộng
               </Typography>
               <Typography variant="h6" fontWeight={600} sx={{ color: "#9333ea" }}>
-                {order.order?.totalDiscountedPrice?.toLocaleString() || order.order?.totalPrice?.toLocaleString()} Đ
+                {formatPrice(order.order?.totalDiscountedPrice || order.order?.totalPrice || 0)}
               </Typography>
             </Box>
 

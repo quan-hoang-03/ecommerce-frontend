@@ -7,6 +7,7 @@ import axios from "axios";
 import { useNotification } from "../../hooks/useNotification";
 import NotificationContainer from "../Notification/NotificationContainer";
 import ConfirmModal from "../Modal/ConfirmModal";
+import { formatPrice } from "../../../utils/formatPrice";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 const OrdersPage = () => {
@@ -156,10 +157,6 @@ const OrdersPage = () => {
     });
   };
 
-  const formatPrice = (price) => {
-    if (!price && price !== 0) return '0';
-    return price.toLocaleString('vi-VN');
-  };
 
   const getImageUrl = (imageUrl) => {
     if (!imageUrl || imageUrl.trim() === '') return null;
@@ -351,7 +348,7 @@ const OrdersPage = () => {
                                 Kích cỡ: {item.size || 'N/A'} | Số lượng: {item.quantity || 1}
                               </p>
                               <span className="fw-bold" style={{ color: '#7c3aed' }}>
-                                {formatPrice(item.discountedPrice || item.price || item.product?.discountedPrice || item.product?.price)} đ
+                                {formatPrice(item.discountedPrice || item.price || item.product?.discountedPrice || item.product?.price)}
                               </span>
                             </div>
                           </div>
@@ -370,7 +367,7 @@ const OrdersPage = () => {
                     <div>
                       <span className="text-muted">Tổng tiền: </span>
                       <span className="fw-bold fs-5" style={{ color: '#059669' }}>
-                        {formatPrice(orderItem.totalDiscountedPrice || orderItem.totalPrice)} đ
+                        {formatPrice(orderItem.totalDiscountedPrice || orderItem.totalPrice)}
                       </span>
                     </div>
                     <div className="d-flex gap-2">

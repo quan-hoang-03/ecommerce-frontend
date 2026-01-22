@@ -1,12 +1,7 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { API_BASE_URL } from '../../../config/apiConfig';
-
-// Format price to Vietnamese currency
-const formatPrice = (price) => {
-  if (!price && price !== 0) return '';
-  return new Intl.NumberFormat('vi-VN').format(price);
-};
+import { formatPriceNumber } from '../../../utils/formatPrice';
 
 const HomeSectionCard = ({product}) => {
   const navigate = useNavigate();
@@ -134,11 +129,11 @@ const HomeSectionCard = ({product}) => {
             {displayPrice ? (
               <>
                 <span className="text-base font-bold text-red-500">
-                  {formatPrice(displayPrice)}₫
+                  {formatPriceNumber(displayPrice)} VNĐ
                 </span>
                 {hasDiscount && originalPrice && (
                   <span className="text-[10px] text-gray-400 line-through">
-                    {formatPrice(originalPrice)}₫
+                    {formatPriceNumber(originalPrice)} VNĐ
                   </span>
                 )}
               </>

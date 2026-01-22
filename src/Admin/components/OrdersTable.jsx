@@ -230,7 +230,7 @@ const OrdersTable = () => {
             <div className="relative">
               <p className="text-sm text-gray-600 mb-1">Tổng thu</p>
               <p className="text-2xl font-bold text-green-600">
-                {totalRevenue.toLocaleString("vi-VN")} ₫
+                {totalRevenue.toLocaleString("vi-VN")} VNĐ
               </p>
             </div>
           </Box>
@@ -243,7 +243,7 @@ const OrdersTable = () => {
             <div className="relative">
               <p className="text-sm text-gray-600 mb-1">Giá trị trung bình</p>
               <p className="text-2xl font-bold text-gray-800">
-                {averageOrderValue.toLocaleString("vi-VN")} ₫
+                {averageOrderValue.toLocaleString("vi-VN")} VNĐ
               </p>
             </div>
           </Box>
@@ -421,7 +421,7 @@ const OrdersTable = () => {
                 <TableCell>
                   <span className="text-green-600 font-semibold">
                     +{item?.totalPrice != null
-                      ? item.totalPrice.toLocaleString("vi-VN")
+                      ? item.totalPrice.toLocaleString("vi-VN") + " VNĐ"
                       : "0"} ₫
                   </span>
                 </TableCell>

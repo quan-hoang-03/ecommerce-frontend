@@ -2,12 +2,7 @@ import React from 'react'
 import "./ProductCard.css"
 import { useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../../../config/apiConfig';
-
-// Format price to Vietnamese currency
-const formatPrice = (price) => {
-  if (!price && price !== 0) return '';
-  return new Intl.NumberFormat('vi-VN').format(price) + 'đ';
-};
+import { formatPrice } from '../../../utils/formatPrice';
 
 const ProductCard = ({ product }) => {
   const navigate = useNavigate();

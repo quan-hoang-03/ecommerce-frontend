@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { getCart, removeItemToCart, updateItemToCart } from "../../State/Cart/Action";
 import CartItem from "./CartItem";
+import { formatPrice } from "../../../utils/formatPrice";
 
 const Cart = () => {
 
@@ -58,27 +59,27 @@ const Cart = () => {
 
         <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
           <Typography>Giá ({cart.cart?.totalItem} sản phẩm)</Typography>
-          <Typography>{cart.cart?.totalPrice} Đ</Typography>
+          <Typography>{formatPrice(cart.cart?.totalPrice)}</Typography>
         </Box>
 
         <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
-          <Typography>Discount</Typography>
+          <Typography>Giảm giá</Typography>
           <Typography sx={{ color: "green" }}>
-            -{cart.cart?.discountedPrice || 0}
+            -{formatPrice(cart.cart?.discount || 0)}
           </Typography>
         </Box>
 
         <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
-          <Typography>Delivery Charges</Typography>
-          <Typography sx={{ color: "green" }}>Free</Typography>
+          <Typography>Phí giao hàng</Typography>
+          <Typography sx={{ color: "green" }}>Miễn phí</Typography>
         </Box>
 
         <Divider sx={{ my: 2 }} />
 
         <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-          <Typography variant="h6">Total Amount</Typography>
+          <Typography variant="h6">Tổng số tiền</Typography>
           <Typography variant="h6" sx={{ color: "green" }}>
-            {cart.cart?.totalDiscountedPrice || 0} Đ
+            {formatPrice(cart.cart?.totalDiscountedPrice || 0)}
           </Typography>
         </Box>
 

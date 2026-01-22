@@ -2,6 +2,7 @@ import { Box, Typography, Card, CardContent, Avatar, CircularProgress } from "@m
 import React, { useEffect, useState } from "react";
 import { API_BASE_URL } from "../../config/apiConfig";
 import axios from "axios";
+import { formatPrice } from "../../utils/formatPrice";
 import {
   BarChart,
   Bar,
@@ -113,6 +114,11 @@ const AdminDashboard = () => {
   };
 
   const formatCurrency = (amount) => {
+    return formatPrice(amount);
+  };
+  
+  // Giữ lại hàm format cũ để tương thích (nếu có dùng ở đâu đó)
+  const formatCurrencyOld = (amount) => {
     if (!amount) return "0đ";
     if (amount >= 1000000000) {
       return (amount / 1000000000).toFixed(1) + "B đ";
@@ -128,7 +134,7 @@ const AdminDashboard = () => {
   const statCards = [
     {
       title: "DOANH THU",
-      value: formatCurrency(stats.totalRevenue),
+      value: formatPrice(stats.totalRevenue),
       icon: <TrendingUpIcon sx={{ fontSize: 24 }} />,
       iconBg: "#ef4444",
       change: "+3.48%",

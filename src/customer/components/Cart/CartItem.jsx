@@ -4,6 +4,7 @@ import { Add, Remove, Delete } from "@mui/icons-material";
 import { useDispatch } from "react-redux";
 import { getCart, removeItemToCart, updateItemToCart } from "../../State/Cart/Action";
 import { API_BASE_URL } from "../../../config/apiConfig";
+import { formatPrice } from "../../../utils/formatPrice";
 
 const CartItem = ({item}) => {
   const dispatch = useDispatch();
@@ -68,10 +69,10 @@ const CartItem = ({item}) => {
             variant="body2"
             sx={{ textDecoration: "line-through", color: "gray" }}
           >
-            {item?.price} Đ
+            {formatPrice(item?.price)}
           </Typography>
           <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            {item?.discountedPrice} Đ
+            {formatPrice(item?.discountedPrice)}
           </Typography>
           <Typography variant="body2" sx={{ color: "green", fontWeight: 500 }}>
             {item?.discountedPresent}% Off

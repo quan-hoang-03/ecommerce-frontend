@@ -9,6 +9,7 @@ import axios from "axios";
 import { API_BASE_URL } from "../../../config/apiConfig";
 import { useNotification } from "../../hooks/useNotification";
 import NotificationContainer from "../Notification/NotificationContainer";
+import { formatPrice } from "../../../utils/formatPrice";
 
 const OrderSummary = ({ address }) => {
   const dispatch = useDispatch();
@@ -179,27 +180,27 @@ const OrderSummary = ({ address }) => {
 
           <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
             <Typography>Giá ({order.order?.totalItem || order.orders?.totalItem || 0} sản phẩm)</Typography>
-            <Typography>{order.order?.totalPrice || order.orders?.totalPrice || 0} Đ</Typography>
+            <Typography>{formatPrice(order.order?.totalPrice || order.orders?.totalPrice || 0)}</Typography>
           </Box>
 
           <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
-            <Typography>Discount</Typography>
+            <Typography>Giảm giá</Typography>
             <Typography sx={{ color: "green" }}>
-              -{order.order?.discountedPrice || order.orders?.discountedPrice || 0} Đ
+              -{formatPrice(order.order?.discount || order.orders?.discount || 0)}
             </Typography>
           </Box>
 
           <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
-            <Typography>Delivery Charges</Typography>
-            <Typography sx={{ color: "green" }}>Free</Typography>
+            <Typography>Phí giao hàng</Typography>
+            <Typography sx={{ color: "green" }}>Miễn phí</Typography>
           </Box>
 
           <Divider sx={{ my: 2 }} />
 
           <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-            <Typography variant="h6">Total Amount</Typography>
+            <Typography variant="h6">Tổng số tiền</Typography>
             <Typography variant="h6" sx={{ color: "green" }}>
-              {order.order?.totalDiscountedPrice || order.orders?.totalDiscountedPrice || 0} Đ
+              {formatPrice(order.order?.totalDiscountedPrice || order.orders?.totalDiscountedPrice || 0)}
             </Typography>
           </Box>
 
